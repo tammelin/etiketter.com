@@ -1,0 +1,43 @@
+# Ignore everything in the root except the "wp-content" directory.
+/*
+!wp-content/
+
+# ... And except some other stuff
+!.gitignore
+!/composer*
+!package.json
+!package-lock.json
+!.templ.mjs
+!README.md
+
+# Ignore everything in the "wp-content" directory
+wp-content/*
+
+# Except our plugins
+!wp-content/plugins/
+wp-content/plugins/*
+!wp-content/plugins/templ-stickers/
+
+!wp-content/mu-plugins/
+wp-content/mu-plugins/*
+!wp-content/mu-plugins/enable-automatic-updates.php
+!wp-content/mu-plugins/acf-local-json.php
+
+# .. And except our themes
+!wp-content/themes/
+wp-content/themes/*
+!wp-content/themes/washtek/
+
+# ... And except some other stuff
+!wp-content/acf-json
+
+# Misc
+.DS_Store
+*.zip
+vendor/
+*.php_*
+*.js_*
+*.bak
+node_modules
+!*.md
+TODO.md
