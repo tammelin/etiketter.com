@@ -1,57 +1,42 @@
 <script setup lang="ts">
-import { ref } from 'vue';
+import { ref, onMounted } from 'vue';
+import { fetchFormFields, submitSticker } from '@/services/api';
+import { addToCart, updateCartFragments, openBricksMiniCart } from '@/services/cart';
+import type { FormFields, FormValues } from '@/types';
+import { useRoute } from 'vue-router';
 
-interface Dimensions {
-    width: string;
-    height: string;
-}
+// Get uuid from path params
+const route = useRoute();
+const uuid = route.params.uuid as string | undefined;
 
-interface Size {
-    dimensions: Dimensions;
-    shape: string;
-}
-
-interface Color {
-    name: string;
-    color: string;
-}
-
-interface Symbol {
-    symbol: {
-        image: string;
-        description: string;
-    };
-}
-
-interface FormFields {
-    sizes: Size[];
-    colors: Color[];
-    symbols: Symbol[];
+if(uuid) {
+    console.log('UUID from URL:', uuid);
 }
 
 const formFields = ref<FormFields | null>(null);
-
-fetch(`${import.meta.env.VITE_API_BASE_URL}/wp-json/templ-stickers/v1/form-fields`)
-    .then(response => response.json())
-    .then((json: FormFields) => {
-        formFields.value = json;
-    });
-
-const formValues = ref({
+const formValues = ref<FormValues>({
     size: '',
     color: '',
     symbol: ''
 });
 
-const onFormSubmit = () => {
-    console.log('Form submitted');
-    console.log(formValues.value);
-};
+onMounted(async () => {
+    formFields.value = await fetchFormFields();
+});
+
+async function onFormSubmit() {
+    const data = await submitSticker(formValues.value);
+    const cartData = await addToCart(data.product_id, data.sticker_uuid);
+
+    if (cartData.fragments) {
+        updateCartFragments(cartData.fragments);
+    }
+    openBricksMiniCart();
+}
 </script>
 
 <template>
     <div>
-        <pre>{{ formValues }}</pre>
         <form @submit.prevent="onFormSubmit">
             <h3>Välj storlek</h3>
             <fieldset>
@@ -85,5 +70,4 @@ const onFormSubmit = () => {
             <button type="submit">Skicka</button>
         </form>
     </div>
-    <pre>{{ formFields }}</pre>
 </template>

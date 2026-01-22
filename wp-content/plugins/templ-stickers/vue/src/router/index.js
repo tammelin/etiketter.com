@@ -11,9 +11,14 @@ const router = createRouter({
       component: FormView
     },
     {
-      path: '/:pathMatch(.*)',
-      component: NotFoundView
-    }
+      path: '/:uuid',
+      name: 'form-with-uuid',
+      component: FormView
+    },
+    // {
+    //   path: '/:pathMatch(.*)',
+    //   component: NotFoundView
+    // }
   ]
 })
 
