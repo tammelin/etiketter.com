@@ -1,0 +1,9 @@
+{
+    "name": "neldikett/ettiketter.com",
+    "type": "project",
+    "scripts": {
+        "make-pot": [
+            "wp i18n make-pot wp-content/plugins/templ-stickers/ wp-content/plugins/templ-stickers/languages/templ-stickers.pot --domain=templ-stickers"
+        ]
+    }
+}

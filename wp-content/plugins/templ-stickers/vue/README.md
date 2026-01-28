@@ -1,6 +1,6 @@
-# templ-etiketter
+# Templ Stickers
 
-This template should help get you started developing with Vue 3 in Vite.
+A Vue app for designing stickers.
 
 ## Recommended IDE Setup
 
@@ -27,3 +27,27 @@ npm run dev
 ```sh
 npm run build
 ```
+
+### Localization
+
+To generate .pot file
+
+```
+composer make-pot
+```
+
+Then everything can be translated the usual WordPress way.
+
+### TODOs
+
+[X] - Make stickers editable
+[X] - Link cart item meta to edit page
+[X] - Store cart item meta as order item meta?
+[X] - Link order item meta to sticker details page
+[ ] - Make order details in My Account more beautiful?
+
+### Questions
+
+Q: Ikoner är i dagsläget png men jag skulle föreslå att enbart svg-ikoner användes istället, OK?
+
+Q: 

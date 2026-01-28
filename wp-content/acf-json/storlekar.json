@@ -31,7 +31,7 @@
                     "aria-label": "",
                     "type": "group",
                     "instructions": "",
-                    "required": 0,
+                    "required": 1,
                     "conditional_logic": 0,
                     "wrapper": {
                         "width": "",
@@ -96,7 +96,7 @@
                     "aria-label": "",
                     "type": "radio",
                     "instructions": "",
-                    "required": 0,
+                    "required": 1,
                     "conditional_logic": 0,
                     "wrapper": {
                         "width": "",
@@ -115,6 +115,36 @@
                     "allow_in_bindings": 0,
                     "layout": "vertical",
                     "save_other_choice": 0,
+                    "parent_repeater": "field_69709750f9cfd"
+                },
+                {
+                    "key": "field_6973426f14a79",
+                    "label": "Produkt",
+                    "name": "product",
+                    "aria-label": "",
+                    "type": "post_object",
+                    "instructions": "",
+                    "required": 1,
+                    "conditional_logic": 0,
+                    "wrapper": {
+                        "width": "",
+                        "class": "",
+                        "id": ""
+                    },
+                    "post_type": [
+                        "product"
+                    ],
+                    "post_status": [
+                        "publish"
+                    ],
+                    "taxonomy": "",
+                    "return_format": "id",
+                    "multiple": 0,
+                    "allow_null": 0,
+                    "allow_in_bindings": 0,
+                    "bidirectional": 0,
+                    "ui": 1,
+                    "bidirectional_target": [],
                     "parent_repeater": "field_69709750f9cfd"
                 }
             ]
@@ -139,5 +169,5 @@
     "description": "",
     "show_in_rest": 0,
     "display_title": "",
-    "modified": 1768986702
+    "modified": 1769161379
 }

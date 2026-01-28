@@ -26,10 +26,21 @@ export interface FormFields {
     symbols: Symbol[];
 }
 
+export interface TextLine {
+    content: string;
+    fontFamily: 'serif' | 'sans-serif';
+    fontStyle: 'normal' | 'italic';
+    fontWeight: 'normal' | 'bold';
+}
+
+export type TextAlignment = 'left' | 'center' | 'right';
+
 export interface FormValues {
-    size: string;
+    size: Size | null;
     color: string;
     symbol: string;
+    textLines: TextLine[];
+    textAlignment: TextAlignment;
 }
 
 export interface StickerSubmitResponse {
