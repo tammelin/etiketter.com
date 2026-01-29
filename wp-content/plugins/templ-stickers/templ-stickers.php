@@ -161,8 +161,8 @@ class Templ_Stickers {
             }
         }
 
-        // Add WC product with slug 'etikett' to cart with meta 'sticker_uuid' => $uuid
-        $product_id = wc_get_product_id_by_sku('etikett');
+        // Get product ID from selected size
+        $product_id = isset($data['size']['product']) ? (int) $data['size']['product'] : 0;
         return [
             'status' => 'success',
             'data' => $data,

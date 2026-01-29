@@ -6,6 +6,7 @@ export interface Dimensions {
 export interface Size {
     dimensions: Dimensions;
     shape: string;
+    product: number;
 }
 
 export interface Color {
