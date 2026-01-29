@@ -98,7 +98,7 @@
             {
                 "param": "options_page",
                 "operator": "==",
-                "value": "etiketter"
+                "value": "sticker_options_page"
             }
         ]
     ],
@@ -112,5 +112,5 @@
     "description": "",
     "show_in_rest": 0,
     "display_title": "",
-    "modified": 1769161449
+    "modified": 1769681404
 }

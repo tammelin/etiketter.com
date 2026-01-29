@@ -1,0 +1,23 @@
+{
+    "key": "ui_options_page_6970971cdd96b",
+    "title": "Inställningar",
+    "active": true,
+    "menu_order": 0,
+    "page_title": "Inställningar",
+    "menu_slug": "sticker_options_page",
+    "parent_slug": "edit.php?post_type=sticker",
+    "advanced_configuration": 1,
+    "icon_url": "",
+    "menu_title": "",
+    "position": "",
+    "redirect": false,
+    "description": "",
+    "menu_icon": [],
+    "update_button": "Update",
+    "updated_message": "Options Updated",
+    "capability": "edit_posts",
+    "data_storage": "options",
+    "post_id": "",
+    "autoload": 0,
+    "modified": 1769681362
+}

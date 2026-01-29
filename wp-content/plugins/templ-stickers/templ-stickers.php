@@ -36,9 +36,16 @@ class Templ_Stickers {
         add_filter('woocommerce_order_item_display_meta_key', [$this, 'custom_order_item_meta_key'], 10, 3);
         add_filter('woocommerce_order_item_display_meta_value', [$this, 'custom_order_item_meta_value'], 10, 3);
 
+        // Link order to sticker posts when order is created
+        add_action('woocommerce_checkout_order_created', [$this, 'link_order_to_stickers']);
+
         // Admin meta box for sticker preview
         add_action('add_meta_boxes', [$this, 'add_sticker_preview_meta_box']);
         add_action('admin_footer', [$this, 'sticker_admin_scripts']);
+
+        // Admin columns for sticker list table
+        add_filter('manage_sticker_posts_columns', [$this, 'add_sticker_admin_columns']);
+        add_action('manage_sticker_posts_custom_column', [$this, 'render_sticker_admin_column'], 10, 2);
     }
 
     public function load_textdomain(): void {
@@ -232,6 +239,25 @@ class Templ_Stickers {
     }
 
     /**
+     * Link order ID to sticker posts when order is created
+     */
+    function link_order_to_stickers(WC_Order $order): void {
+        foreach ($order->get_items() as $item) {
+            $uuid = $item->get_meta('sticker_uuid');
+            if (!$uuid) {
+                continue;
+            }
+
+            $sticker = $this->get_sticker_by_uuid($uuid);
+            if (!$sticker) {
+                continue;
+            }
+
+            add_post_meta($sticker->ID, '_order_id', $order->get_id());
+        }
+    }
+
+    /**
      * Get sticker post by UUID
      */
     function get_sticker_by_uuid(string $uuid): ?WP_Post {
@@ -402,6 +428,47 @@ class Templ_Stickers {
             </script>
             <?php
         }
+    }
+
+    /**
+     * Add custom columns to sticker list table
+     */
+    function add_sticker_admin_columns(array $columns): array {
+        $new_columns = [];
+        foreach ($columns as $key => $value) {
+            $new_columns[$key] = $value;
+            if ($key === 'title') {
+                $new_columns['order_id'] = __('Order', 'templ-stickers');
+            }
+        }
+        return $new_columns;
+    }
+
+    /**
+     * Render custom column content for sticker list table
+     */
+    function render_sticker_admin_column(string $column, int $post_id): void {
+        if ($column !== 'order_id') {
+            return;
+        }
+
+        $order_ids = get_post_meta($post_id, '_order_id');
+        if (empty($order_ids)) {
+            echo '—';
+            return;
+        }
+
+        $links = [];
+        foreach ($order_ids as $order_id) {
+            $order = wc_get_order($order_id);
+            if ($order) {
+                $edit_url = $order->get_edit_order_url();
+                $links[] = '<a href="' . esc_url($edit_url) . '">#' . esc_html($order_id) . '</a>';
+            } else {
+                $links[] = '#' . esc_html($order_id);
+            }
+        }
+        echo implode(', ', $links);
     }
 
     public function put_update_sticker(WP_REST_Request $request): array {
