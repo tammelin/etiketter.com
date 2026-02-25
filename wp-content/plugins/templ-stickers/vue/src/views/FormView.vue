@@ -3,15 +3,11 @@ import { ref, computed, watch, onMounted } from 'vue';
 import { fetchFormFields, fetchSticker, submitSticker, updateSticker } from '@/services/api';
 import { addToCart, updateCartFragments, openBricksMiniCart } from '@/services/cart';
 import type { FormFields, FormValues, TextLine } from '@/types';
-import { useRoute, useRouter } from 'vue-router';
 import { calculateMaxLines, calculateMaxChars } from '@/utils/textCalculations';
 import StickerPreview from '@/components/StickerPreview.vue';
 import { __ } from '@/utils/i18n';
 
-// Get uuid from path params (computed so it reacts to route changes)
-const route = useRoute();
-const router = useRouter();
-const uuid = computed(() => route.params.uuid as string | undefined);
+const uuid = ref<string | undefined>(new URLSearchParams(window.location.search).get('sticker-uuid') ?? undefined);
 
 const formFields = ref<FormFields | null>(null);
 const previewRef = ref<InstanceType<typeof StickerPreview> | null>(null);
@@ -102,7 +98,8 @@ async function onFormSubmit() {
             updateCartFragments(cartData.fragments);
         }
         openBricksMiniCart();
-        router.push('/' + data.sticker_uuid);
+        uuid.value = data.sticker_uuid;
+        history.replaceState({}, '', '?sticker-uuid=' + data.sticker_uuid);
     }
 }
 
@@ -114,12 +111,14 @@ async function onSaveAsNew() {
         updateCartFragments(cartData.fragments);
     }
     openBricksMiniCart();
-    router.push('/' + data.sticker_uuid);
+    uuid.value = data.sticker_uuid;
+    history.replaceState({}, '', '?sticker-uuid=' + data.sticker_uuid);
 }
 
 function onCreateNew() {
     if (!confirm(__('confirmCreateNew'))) return;
-    router.push('/');
+    uuid.value = undefined;
+    history.replaceState({}, '', window.location.pathname);
 }
 
 // Enforce character limit on text input

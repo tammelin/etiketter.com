@@ -1,8 +1,9 @@
 <script setup>
+import FormView from './views/FormView.vue'
 </script>
 
 <template>
-  <RouterView />
+  <FormView />
 </template>
 
 <style scoped>
