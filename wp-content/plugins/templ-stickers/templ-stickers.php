@@ -31,13 +31,20 @@ class Templ_Stickers {
         add_filter('woocommerce_cart_item_thumbnail', [$this, 'custom_cart_item_thumbnail'], 10, 3);
         add_filter('woocommerce_store_api_cart_item_images', [$this, 'custom_block_cart_item_images'], 10, 3);
 
-        // WooCommerce order admin hooks
+        // WooCommerce order hooks (admin + frontend)
+        add_action('woocommerce_order_item_meta_start', [$this, 'custom_order_item_thumbnail_frontend'], 10, 3);
         add_filter('woocommerce_admin_order_item_thumbnail', [$this, 'custom_admin_order_item_thumbnail'], 10, 3);
         add_filter('woocommerce_order_item_display_meta_key', [$this, 'custom_order_item_meta_key'], 10, 3);
         add_filter('woocommerce_order_item_display_meta_value', [$this, 'custom_order_item_meta_value'], 10, 3);
 
         // Link order to sticker posts when order is created
-        add_action('woocommerce_checkout_order_created', [$this, 'link_order_to_stickers']);
+        add_action('woocommerce_new_order', [$this, 'link_order_to_stickers']);
+
+        // Daily cron to clean up abandoned sticker posts
+        add_action('templ_stickers_cleanup', [$this, 'cleanup_abandoned_stickers']);
+        if (!wp_next_scheduled('templ_stickers_cleanup')) {
+            wp_schedule_event(time(), 'daily', 'templ_stickers_cleanup');
+        }
 
         // Admin meta box for sticker preview
         add_action('add_meta_boxes', [$this, 'add_sticker_preview_meta_box']);
@@ -221,7 +228,7 @@ class Templ_Stickers {
     function get_item_data(array $item_data, array $cart_item): array {
         if (isset($cart_item['sticker_uuid'])) {
             $uuid = esc_attr($cart_item['sticker_uuid']);
-            $edit_url = esc_url(home_url('/etiketter/' . $uuid));
+            $edit_url = esc_url(home_url('/etiketter/?sticker-uuid=' . $uuid));
             $item_data[] = [
                 'key'     => $uuid,
                 'value'   => $uuid,
@@ -241,7 +248,11 @@ class Templ_Stickers {
     /**
      * Link order ID to sticker posts when order is created
      */
-    function link_order_to_stickers(WC_Order $order): void {
+    function link_order_to_stickers(int $order_id): void {
+        $order = wc_get_order($order_id);
+        if (!$order) {
+            return;
+        }
         foreach ($order->get_items() as $item) {
             $uuid = $item->get_meta('sticker_uuid');
             if (!$uuid) {
@@ -254,6 +265,28 @@ class Templ_Stickers {
             }
 
             add_post_meta($sticker->ID, '_order_id', $order->get_id());
+        }
+    }
+
+    /**
+     * Delete abandoned sticker posts (no _order_id, older than 7 days)
+     */
+    function cleanup_abandoned_stickers(): void {
+        $posts = get_posts([
+            'post_type'      => 'sticker',
+            'posts_per_page' => -1,
+            'date_query'     => [['before' => '7 days ago']],
+            'meta_query'     => [
+                [
+                    'key'     => '_order_id',
+                    'compare' => 'NOT EXISTS',
+                ],
+            ],
+            'fields' => 'ids',
+        ]);
+
+        foreach ($posts as $post_id) {
+            wp_delete_post($post_id, true);
         }
     }
 
@@ -322,6 +355,28 @@ class Templ_Stickers {
     }
 
     /**
+     * Render sticker thumbnail on frontend (My Account > View Order)
+     */
+    function custom_order_item_thumbnail_frontend(int $_item_id, WC_Order_Item $item, WC_Order $_order): void {
+        if (is_admin()) {
+            return;
+        }
+
+        $uuid = $item->get_meta('sticker_uuid');
+        if (!$uuid) {
+            return;
+        }
+
+        $sticker = $this->get_sticker_by_uuid($uuid);
+        if (!$sticker) {
+            return;
+        }
+
+        $svg_url = rest_url('templ-stickers/v1/sticker/' . $uuid . '/svg');
+        echo '<img src="' . esc_url($svg_url) . '" alt="' . esc_attr__('Sticker preview', 'templ-stickers') . '" style="max-width:80px; display:block; margin-bottom:8px;" />';
+    }
+
+    /**
      * Custom thumbnail for order line items in WP Admin
      */
     function custom_admin_order_item_thumbnail(string $image, int $item_id, WC_Order_Item $item): string {
@@ -353,17 +408,20 @@ class Templ_Stickers {
      * Make sticker_uuid meta value a link to the sticker post edit page in WP Admin
      */
     function custom_order_item_meta_value(string $value, WC_Meta_Data $meta, WC_Order_Item $item): string {
+        // This hook is used in WP Admin as well as My Account, so we need to check that we are in WP Admin before modifying the output
+        // TODO? Make it possible for customers to create a copy of the sticker
+        if (!is_admin()) {
+            return $value;
+        }
         if ($meta->key !== 'sticker_uuid') {
             return $value;
         }
-
         $sticker = $this->get_sticker_by_uuid($value);
-        if ($sticker) {
-            $edit_url = get_edit_post_link($sticker->ID);
-            return '<a href="' . esc_url($edit_url) . '">' . esc_html($value) . '</a>';
+        if(!$sticker) {
+            return $value;
         }
-
-        return $value;
+        $edit_url = get_edit_post_link($sticker->ID);
+        return '<a href="' . esc_url($edit_url) . '">' . esc_html($value) . '</a>';
     }
 
     /**
@@ -436,6 +494,9 @@ class Templ_Stickers {
     function add_sticker_admin_columns(array $columns): array {
         $new_columns = [];
         foreach ($columns as $key => $value) {
+            if ($key === 'title') {
+                $new_columns['sticker_thumbnail'] = __('Preview', 'templ-stickers');
+            }
             $new_columns[$key] = $value;
             if ($key === 'title') {
                 $new_columns['order_id'] = __('Order', 'templ-stickers');
@@ -448,6 +509,17 @@ class Templ_Stickers {
      * Render custom column content for sticker list table
      */
     function render_sticker_admin_column(string $column, int $post_id): void {
+        if ($column === 'sticker_thumbnail') {
+            $uuid = get_post_meta($post_id, 'sticker_uuid', true);
+            if ($uuid) {
+                $svg_url = rest_url('templ-stickers/v1/sticker/' . $uuid . '/svg');
+                echo '<img src="' . esc_url($svg_url) . '" alt="' . esc_attr__('Sticker preview', 'templ-stickers') . '" style="width:50px;height:50px;object-fit:contain;" />';
+            } else {
+                echo '—';
+            }
+            return;
+        }
+
         if ($column !== 'order_id') {
             return;
         }
@@ -582,3 +654,7 @@ class Templ_Stickers {
 
 }
 new Templ_Stickers();
+
+register_deactivation_hook(__FILE__, function() {
+    wp_clear_scheduled_hook('templ_stickers_cleanup');
+});
