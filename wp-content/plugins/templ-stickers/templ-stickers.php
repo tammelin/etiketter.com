@@ -21,6 +21,7 @@ class Templ_Stickers {
         add_action('init', [$this, 'rewrite_rule']);
         add_shortcode('templ-stickers', [$this, 'shortcode']);
         add_action('wp_enqueue_scripts', [$this, 'register_scripts']);
+        add_action('wp_head', [$this, 'print_i18n_inline_script']);
         add_filter('script_loader_tag', [$this, 'script_loader_tag'], 10, 3);
         add_action('rest_api_init', [$this, 'register_routes']);
         add_filter('use_block_editor_for_post', [$this, 'disable_gutenberg'], 10, 2);
@@ -71,27 +72,6 @@ class Templ_Stickers {
     public function shortcode(): string {
         wp_enqueue_script('templ-stickers');
         wp_enqueue_style('templ-stickers');
-        wp_localize_script('templ-stickers', 'templStickersI18n', [
-            'chooseSize'        => __('Select size', 'templ-stickers'),
-            'chooseColor'       => __('Select color', 'templ-stickers'),
-            'chooseSymbol'      => __('Select symbol', 'templ-stickers'),
-            'addText'           => __('Add text', 'templ-stickers'),
-            'row'               => __('Line', 'templ-stickers'),
-            'sansSerif'         => __('Sans-serif', 'templ-stickers'),
-            'serif'             => __('Serif', 'templ-stickers'),
-            'italic'            => __('Italic', 'templ-stickers'),
-            'bold'              => __('Bold', 'templ-stickers'),
-            'textAlignment'     => __('Text alignment:', 'templ-stickers'),
-            'alignLeft'         => __('Left', 'templ-stickers'),
-            'alignCenter'       => __('Center', 'templ-stickers'),
-            'alignRight'        => __('Right', 'templ-stickers'),
-            'save'              => __('Save', 'templ-stickers'),
-            'saveAndAddToCart'  => __('Save and add to cart', 'templ-stickers'),
-            'saveAsNewAndAddToCart' => __('Save as new and add to cart', 'templ-stickers'),
-            'createNew'         => __('Create new sticker', 'templ-stickers'),
-            'confirmCreateNew'  => __('Do you want to create a new sticker? Unsaved changes will be lost.', 'templ-stickers'),
-            'maxChars'          => __('Max %s characters', 'templ-stickers'),
-        ]);
         return '<div id="app"></div>';
     }
 
@@ -108,6 +88,32 @@ class Templ_Stickers {
             $file_url = str_replace(TEMPL_STICKERS_PLUGIN_DIR, TEMPL_STICKERS_PLUGIN_URL, $file);
             wp_register_style('templ-stickers', $file_url, [], null);
         }
+
+    }
+
+    public function print_i18n_inline_script(): void {
+        $i18n = [
+            'chooseSize'           => __('Select size', 'templ-stickers'),
+            'chooseColor'          => __('Select color', 'templ-stickers'),
+            'chooseSymbol'         => __('Select symbol', 'templ-stickers'),
+            'addText'              => __('Add text', 'templ-stickers'),
+            'row'                  => __('Line', 'templ-stickers'),
+            'sansSerif'            => __('Sans-serif', 'templ-stickers'),
+            'serif'                => __('Serif', 'templ-stickers'),
+            'italic'               => __('Italic', 'templ-stickers'),
+            'bold'                 => __('Bold', 'templ-stickers'),
+            'textAlignment'        => __('Text alignment:', 'templ-stickers'),
+            'alignLeft'            => __('Left', 'templ-stickers'),
+            'alignCenter'          => __('Center', 'templ-stickers'),
+            'alignRight'           => __('Right', 'templ-stickers'),
+            'save'                 => __('Save', 'templ-stickers'),
+            'saveAndAddToCart'     => __('Save and add to cart', 'templ-stickers'),
+            'saveAsNewAndAddToCart'=> __('Save as new and add to cart', 'templ-stickers'),
+            'createNew'            => __('Create new sticker', 'templ-stickers'),
+            'confirmCreateNew'     => __('Do you want to create a new sticker? Unsaved changes will be lost.', 'templ-stickers'),
+            'maxChars'             => __('Max %s characters', 'templ-stickers'),
+        ];
+        echo '<script>window.templStickersI18n = ' . wp_json_encode($i18n) . ';</script>' . "\n";
     }
 
     // Add type="module" to script tag
