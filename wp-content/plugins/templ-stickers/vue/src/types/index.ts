@@ -7,6 +7,8 @@ export interface Size {
     dimensions: Dimensions;
     shape: string;
     product: number;
+    max_rows?: number;
+    max_chars?: number;
 }
 
 export interface Color {

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, watch } from 'vue';
+import { ref, computed, watch, useTemplateRef } from 'vue';
 import type { FormValues } from '@/types';
 import { generateStickerSVGWithInlinedSymbol } from '@/services/svgGenerator';
 
@@ -8,19 +8,48 @@ const props = defineProps<{
 }>();
 
 const svgContent = ref<string | null>(null);
+const currentColor = ref('#ffffff');
+const currentWidth = ref(0);
+const currentShape = ref('');
+const wrapperRef = useTemplateRef<HTMLDivElement>('wrapper');
 
-// Watch form values and regenerate SVG when they change
+const svgDisplayWidth = computed(() =>
+    currentWidth.value ? `min(${currentWidth.value * 3}px, 100%)` : '100%'
+);
+
+const borderRadius = computed(() => {
+    const s = currentShape.value.toLowerCase();
+    if (s === 'rund' || s === 'round') return '50%';
+    if (s === 'oval' || s === 'ellipse') return '50%';
+    return '0px';
+});
+
+// Update color immediately — CSS variable for transition, attribute for export
+watch(() => props.formValues.color, (color) => {
+    currentColor.value = color || '#ffffff';
+    wrapperRef.value?.querySelector('.sticker-shape')?.setAttribute('fill', color || '#ffffff');
+});
+
+// Regenerate SVG only for structural changes
 watch(
-    () => props.formValues,
+    () => ({
+        size: props.formValues.size,
+        symbol: props.formValues.symbol,
+        textLines: props.formValues.textLines,
+        textAlignment: props.formValues.textAlignment,
+    }),
     async (newValues) => {
         if (!newValues.size) {
             svgContent.value = null;
             return;
         }
 
+        currentWidth.value = parseInt(newValues.size.dimensions.width, 10);
+        currentShape.value = newValues.size.shape || '';
+
         svgContent.value = await generateStickerSVGWithInlinedSymbol({
             size: newValues.size,
-            color: newValues.color || '#ffffff',
+            color: props.formValues.color || '#ffffff',
             symbol: newValues.symbol,
             textLines: newValues.textLines,
             textAlignment: newValues.textAlignment,
@@ -29,7 +58,6 @@ watch(
     { deep: true, immediate: true }
 );
 
-// Expose method for parent to access the current SVG content
 defineExpose({
     getSvgContent: () => svgContent.value,
 });
@@ -38,7 +66,18 @@ defineExpose({
 <template>
     <div class="sticker-preview">
         <h3>Preview</h3>
-        <div v-if="svgContent" class="preview-container" v-html="svgContent"></div>
+        <div v-if="svgContent" class="preview-container">
+            <div
+                ref="wrapper"
+                class="svg-wrapper"
+                :style="{
+                    '--sticker-color': currentColor,
+                    width: svgDisplayWidth,
+                    borderRadius: borderRadius,
+                }"
+                v-html="svgContent"
+            ></div>
+        </div>
         <div v-else class="preview-placeholder">
             <p>Select a size to see preview</p>
         </div>
@@ -50,7 +89,7 @@ defineExpose({
     padding: 1rem;
     border: 1px solid #ddd;
     border-radius: 4px;
-    background: #f9f9f9;
+    background: #f8f8f8;
 }
 
 .preview-container {
@@ -58,15 +97,26 @@ defineExpose({
     justify-content: center;
     align-items: center;
     min-height: 150px;
-    background: white;
     border-radius: 4px;
     padding: 1rem;
+    background: white;
 }
 
-.preview-container :deep(svg) {
-    max-width: 100%;
-    max-height: 300px;
-    height: auto;
+.svg-wrapper {
+    border: 1px solid lightgrey;
+    transition: width 0.4s ease, aspect-ratio 0.4s ease, border-radius 0.4s ease;
+    overflow: hidden;
+}
+
+.svg-wrapper :deep(svg) {
+    display: block;
+    width: 100%;
+    height: 100%;
+}
+
+.svg-wrapper :deep(.sticker-shape) {
+    transition: fill 0.3s ease;
+    fill: var(--sticker-color) !important;
 }
 
 .preview-placeholder {

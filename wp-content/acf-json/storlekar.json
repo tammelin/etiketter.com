@@ -118,6 +118,54 @@
                     "parent_repeater": "field_69709750f9cfd"
                 },
                 {
+                    "key": "field_storlek_max_rows",
+                    "label": "Max rader",
+                    "name": "max_rows",
+                    "aria-label": "",
+                    "type": "number",
+                    "instructions": "Maximalt antal textrader för denna storlek",
+                    "required": 0,
+                    "conditional_logic": 0,
+                    "wrapper": {
+                        "width": "",
+                        "class": "",
+                        "id": ""
+                    },
+                    "default_value": 3,
+                    "min": 1,
+                    "max": 10,
+                    "allow_in_bindings": 0,
+                    "placeholder": "",
+                    "step": 1,
+                    "prepend": "",
+                    "append": "",
+                    "parent_repeater": "field_69709750f9cfd"
+                },
+                {
+                    "key": "field_storlek_max_chars",
+                    "label": "Max tecken per rad",
+                    "name": "max_chars",
+                    "aria-label": "",
+                    "type": "number",
+                    "instructions": "Maximalt antal tecken per rad för denna storlek",
+                    "required": 0,
+                    "conditional_logic": 0,
+                    "wrapper": {
+                        "width": "",
+                        "class": "",
+                        "id": ""
+                    },
+                    "default_value": 20,
+                    "min": 1,
+                    "max": 100,
+                    "allow_in_bindings": 0,
+                    "placeholder": "",
+                    "step": 1,
+                    "prepend": "",
+                    "append": "",
+                    "parent_repeater": "field_69709750f9cfd"
+                },
+                {
                     "key": "field_6973426f14a79",
                     "label": "Produkt",
                     "name": "product",
@@ -169,5 +217,5 @@
     "description": "",
     "show_in_rest": 0,
     "display_title": "",
-    "modified": 1769681395
+    "modified": 1741046400
 }

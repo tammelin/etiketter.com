@@ -33,6 +33,7 @@ const formValues = ref<FormValues>({
 // Calculate max chars based on selected size
 const maxChars = computed(() => {
     if (!formValues.value.size) return 0;
+    if (formValues.value.size.max_chars) return formValues.value.size.max_chars;
     const width = parseInt(formValues.value.size.dimensions.width, 10);
     return calculateMaxChars(width);
 });
@@ -46,17 +47,15 @@ watch(
             return;
         }
 
-        const newMaxLines = calculateMaxLines(parseInt(newSize.dimensions.height, 10));
+        const newMaxLines = newSize.max_rows ?? calculateMaxLines(parseInt(newSize.dimensions.height, 10));
         const currentLines = formValues.value.textLines;
 
         if (currentLines.length < newMaxLines) {
-            // Add more lines
             const linesToAdd = newMaxLines - currentLines.length;
             for (let i = 0; i < linesToAdd; i++) {
                 currentLines.push(createDefaultTextLine());
             }
         } else if (currentLines.length > newMaxLines) {
-            // Remove excess lines
             formValues.value.textLines = currentLines.slice(0, newMaxLines);
         }
     },
@@ -255,6 +254,12 @@ function onTextInput(index: number, event: Event) {
 .sticker-form {
     flex: 1;
     min-width: 300px;
+}
+
+:deep(.sticker-preview) {
+    position: sticky;
+    top: 1rem;
+    align-self: flex-start;
 }
 
 .text-input-section {

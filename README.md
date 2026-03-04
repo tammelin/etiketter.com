@@ -19,6 +19,7 @@ Then everything can be translated the usual WordPress way.
 [X] - Store cart item meta as order item meta?
 [X] - Link order item meta to sticker details page
 [ ] - Make order details in My Account more beautiful?
+[ ] - Add support for icon uploads
 
 ## Features
 

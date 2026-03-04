@@ -5,7 +5,8 @@ const CHAR_WIDTH_MM = 3;
 const HORIZONTAL_PADDING_MM = 10;
 
 /**
- * Calculate maximum number of text lines based on sticker height
+ * Calculate maximum number of text lines based on sticker height.
+ * Pass hasSymbol=true to reserve space for the symbol at the top.
  */
 export function calculateMaxLines(heightMm: number): number {
     const availableHeight = heightMm - VERTICAL_PADDING_MM;

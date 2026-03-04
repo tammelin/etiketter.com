@@ -52,22 +52,37 @@ export async function fetchSvgContent(url: string): Promise<string> {
 /**
  * Generate SVG string with inlined SVG symbol
  */
+function isRoundShape(shape: string): boolean {
+    const s = shape.toLowerCase();
+    return s === 'rund' || s === 'round' || s === 'oval' || s === 'ellipse';
+}
+
 export async function generateStickerSVGWithInlinedSymbol(design: StickerDesign): Promise<string> {
     const width = parseInt(design.size.dimensions.width, 10);
     const height = parseInt(design.size.dimensions.height, 10);
+    const sideLayout = design.symbol ? isRoundShape(design.size.shape) : false;
 
     const shapeElement = generateShape(design.size.shape, width, height, design.color);
-    const textElements = generateTextElements(design.textLines, design.textAlignment, width, height);
+
+    // For side layout: symbol takes left 35%, text gets right 65%
+    // For top layout: symbol takes top portion, text gets remaining height below
+    const symbolAreaWidth = sideLayout ? width * 0.35 : 0;
+    const symbolBottom = !sideLayout && design.symbol ? height * 0.1 + Math.min(width, height) * 0.3 : 0;
+
+    const textElements = generateTextElements(
+        design.textLines, design.textAlignment, width, height,
+        { symbolBottom, textLeft: symbolAreaWidth }
+    );
 
     let symbolElement = '';
     if (design.symbol) {
         const svgContent = await fetchSvgContent(design.symbol);
         if (svgContent) {
-            symbolElement = generateInlinedSymbol(svgContent, width, height);
+            symbolElement = generateInlinedSymbol(svgContent, width, height, sideLayout);
         }
     }
 
-    return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${width} ${height}" width="${width}mm" height="${height}mm">
+    return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${width} ${height}">
   ${shapeElement}
   ${symbolElement}
   ${textElements}
@@ -81,21 +96,20 @@ function generateShape(shape: string, width: number, height: number, color: stri
     const normalizedShape = shape.toLowerCase();
 
     if (normalizedShape === 'rund' || normalizedShape === 'round') {
-        // Circle - use the smaller dimension as diameter
         const radius = Math.min(width, height) / 2;
         const cx = width / 2;
         const cy = height / 2;
-        return `<circle cx="${cx}" cy="${cy}" r="${radius}" fill="${color}" />`;
+        return `<circle cx="${cx}" cy="${cy}" r="${radius}" fill="${color}" class="sticker-shape" />`;
     }
 
     if (normalizedShape === 'oval' || normalizedShape === 'ellipse') {
         const rx = width / 2;
         const ry = height / 2;
-        return `<ellipse cx="${rx}" cy="${ry}" rx="${rx}" ry="${ry}" fill="${color}" />`;
+        return `<ellipse cx="${rx}" cy="${ry}" rx="${rx}" ry="${ry}" fill="${color}" class="sticker-shape" />`;
     }
 
     // Default: rectangle (rektangulär)
-    return `<rect x="0" y="0" width="${width}" height="${height}" fill="${color}" />`;
+    return `<rect x="0" y="0" width="${width}" height="${height}" fill="${color}" class="sticker-shape" />`;
 }
 
 /**
@@ -105,22 +119,31 @@ function generateTextElements(
     textLines: TextLine[],
     alignment: TextAlignment,
     width: number,
-    height: number
+    height: number,
+    { symbolBottom = 0, textLeft = 0 }: { symbolBottom?: number; textLeft?: number } = {}
 ): string {
     if (!textLines.length) return '';
 
     const lineHeight = getLineHeightMm();
     const verticalPadding = getVerticalPaddingMm();
 
-    // Calculate starting Y position to center text block vertically
+    // Text area bounds
+    const textAreaLeft = textLeft;
+    const textAreaWidth = width - textLeft;
+    const textAreaTop = symbolBottom > 0 ? symbolBottom : 0;
+    const textAreaHeight = height - textAreaTop;
     const totalTextHeight = textLines.length * lineHeight;
-    const startY = (height - totalTextHeight) / 2 + lineHeight / 2 + verticalPadding / 2;
+    const startY = textAreaTop + (textAreaHeight - totalTextHeight) / 2 + lineHeight / 2 + verticalPadding / 2;
 
     // Map alignment to SVG text-anchor
     const textAnchor = alignment === 'left' ? 'start' : alignment === 'right' ? 'end' : 'middle';
 
-    // Calculate X position based on alignment
-    const x = alignment === 'left' ? 5 : alignment === 'right' ? width - 5 : width / 2;
+    // Calculate X position within the text area
+    const x = alignment === 'left'
+        ? textAreaLeft + 3
+        : alignment === 'right'
+            ? textAreaLeft + textAreaWidth - 3
+            : textAreaLeft + textAreaWidth / 2;
 
     return textLines
         .map((line, index) => {
@@ -147,10 +170,12 @@ function generateTextElements(
 /**
  * Generate inlined SVG symbol wrapped in a <g> element with proper positioning
  */
-function generateInlinedSymbol(svgContent: string, width: number, height: number): string {
+function generateInlinedSymbol(svgContent: string, width: number, height: number, sideLayout = false): string {
     const symbolSize = Math.min(width, height) * 0.3;
-    const x = (width - symbolSize) / 2;
-    const y = height * 0.1;
+    // Side layout: center symbol vertically in left 35% of width
+    // Top layout: center symbol horizontally in top portion
+    const x = sideLayout ? (width * 0.35 - symbolSize) / 2 : (width - symbolSize) / 2;
+    const y = sideLayout ? (height - symbolSize) / 2 : height * 0.1;
 
     // Parse the SVG to extract viewBox and inner content
     const parser = new DOMParser();
