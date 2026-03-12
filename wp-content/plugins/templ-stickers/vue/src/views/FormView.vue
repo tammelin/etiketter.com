@@ -227,24 +227,25 @@ function onTextInput(index: number, event: Event) {
                                 :id="`text-line-${index}`"
                                 v-model="line.content"
                                 :maxlength="maxChars"
+                                :tabindex="index + 1"
                                 @input="onTextInput(index, $event)"
                                 :placeholder="__('maxChars').replace('%s', String(maxChars))"
                             />
                             <!-- <span class="char-count">{{ line.content.length }}/{{ maxChars }}</span> -->
                             <label>
-                                <input type="radio" :name="`font-${index}`" value="straight" v-model="line.textStyle" />
+                                <input type="radio" :name="`font-${index}`" value="straight" v-model="line.textStyle" tabindex="-1" />
                                 <!-- {{ __('columnStraight') }} -->
                             </label>
                             <label>
-                                <input type="radio" :name="`font-${index}`" value="italic" v-model="line.textStyle" />
+                                <input type="radio" :name="`font-${index}`" value="italic" v-model="line.textStyle" tabindex="-1" />
                                 <!-- {{ __('columnItalic') }} -->
                             </label>
                             <label>
-                                <input type="radio" :name="`font-${index}`" value="cursive" v-model="line.textStyle" />
+                                <input type="radio" :name="`font-${index}`" value="cursive" v-model="line.textStyle" tabindex="-1" />
                                 <!-- {{ __('columnCursive') }} -->
                             </label>
                             <label>
-                                <input type="checkbox" :checked="line.fontWeight === 'bold'" @change="line.fontWeight = line.fontWeight === 'bold' ? 'normal' : 'bold'" />
+                                <input type="checkbox" :checked="line.fontWeight === 'bold'" @change="line.fontWeight = line.fontWeight === 'bold' ? 'normal' : 'bold'" tabindex="-1" />
                                 <!-- {{ __('columnBold') }} -->
                             </label>
                         </div>

@@ -127,12 +127,18 @@ function generateTextElements(
     const lineHeight = getLineHeightMm();
     const verticalPadding = getVerticalPaddingMm();
 
+    // Trim leading and trailing empty lines, keep internal empty lines as spacers
+    let first = textLines.findIndex(l => l.content.trim() !== '');
+    let last = [...textLines].reverse().findIndex(l => l.content.trim() !== '');
+    if (first === -1) return ''; // all empty
+    const activeLines = textLines.slice(first, textLines.length - last);
+
     // Text area bounds
     const textAreaLeft = textLeft;
     const textAreaWidth = width - textLeft;
     const textAreaTop = symbolBottom > 0 ? symbolBottom : 0;
     const textAreaHeight = height - textAreaTop;
-    const totalTextHeight = textLines.length * lineHeight;
+    const totalTextHeight = activeLines.length * lineHeight;
     const startY = textAreaTop + (textAreaHeight - totalTextHeight) / 2 + lineHeight / 2 + verticalPadding / 2;
 
     // Map alignment to SVG text-anchor
@@ -145,9 +151,9 @@ function generateTextElements(
             ? textAreaLeft + textAreaWidth - 3
             : textAreaLeft + textAreaWidth / 2;
 
-    return textLines
+    return activeLines
         .map((line, index) => {
-            if (!line.content.trim()) return '';
+            if (!line.content.trim()) return `<text x="${x}" y="${startY + index * lineHeight}" font-size="6"> </text>`;
 
             const y = startY + index * lineHeight;
             let fontFamily: string;
@@ -175,7 +181,6 @@ function generateTextElements(
     fill="#000000"
   >${escapeXml(line.content)}</text>`;
         })
-        .filter(Boolean)
         .join('\n  ');
 }
 
