@@ -45,10 +45,29 @@ const maxChars = computed(() => {
     return calculateMaxChars(width);
 });
 
-// Watch for size changes to update text lines array
+const quantity = ref(1);
+
+const quantityError = computed(() => {
+    const rules = formValues.value.size?.quantity;
+    if (!rules) return null;
+    const qty = quantity.value;
+    if (qty < rules.min) return `Minsta antal är ${rules.min}`;
+    if (rules.max !== '' && qty > rules.max) return `Högsta antal är ${rules.max}`;
+    if ((qty - rules.min) % rules.step !== 0) return `Antal måste vara i steg om ${rules.step} (t.ex. ${rules.min}, ${rules.min + rules.step}, ...)`;
+    return null;
+});
+
+const lineTotal = computed(() => {
+    const size = formValues.value.size;
+    if (!size) return null;
+    return size.unit_price * quantity.value + size.base_price;
+});
+
+// Watch for size changes to update text lines array (and reset quantity)
 watch(
     () => formValues.value.size,
     (newSize) => {
+        quantity.value = newSize?.quantity?.min ?? 1;
         if (!newSize) {
             formValues.value.textLines = [];
             return;
@@ -78,6 +97,16 @@ watch(
 onMounted(async () => {
     formFields.value = await fetchFormFields();
 
+    if (!uuid.value && formFields.value?.sizes?.length) {
+        formValues.value.size = formFields.value.sizes[0];
+        quantity.value = formFields.value.sizes[0].quantity?.min ?? 1;
+        const firstSize = formFields.value.sizes[0];
+        const colors = firstSize.colors?.length ? firstSize.colors : formFields.value.colors ?? [];
+        if (colors.length) {
+            formValues.value.color = colors[0].color;
+        }
+    }
+
     if (uuid.value) {
         const response = await fetchSticker(uuid.value);
         const data = response.data;
@@ -105,7 +134,7 @@ async function onFormSubmit() {
         openBricksMiniCart();
     } else {
         const data = await submitSticker(formValues.value, svgContent);
-        const cartData = await addToCart(data.product_id, data.sticker_uuid);
+        const cartData = await addToCart(data.product_id, data.sticker_uuid, quantity.value);
         if (cartData.fragments) {
             updateCartFragments(cartData.fragments);
         }
@@ -118,7 +147,7 @@ async function onFormSubmit() {
 async function onSaveAsNew() {
     const svgContent = previewRef.value?.getSvgContent();
     const data = await submitSticker(formValues.value, svgContent);
-    const cartData = await addToCart(data.product_id, data.sticker_uuid);
+    const cartData = await addToCart(data.product_id, data.sticker_uuid, quantity.value);
     if (cartData.fragments) {
         updateCartFragments(cartData.fragments);
     }
@@ -146,58 +175,54 @@ function onTextInput(index: number, event: Event) {
 <template>
     <div class="sticker-form-container">
         <form @submit.prevent="onFormSubmit" class="sticker-form">
-            <h3>{{ __('chooseSize') }}</h3>
-            <fieldset>
-                <div v-for="size in formFields?.sizes" :key="size.dimensions.width + size.dimensions.height">
-                    <input
-                        type="radio"
-                        :id="`${size.dimensions.width}x${size.dimensions.height}`"
-                        name="size"
-                        :value="size"
-                        v-model="formValues.size"
-                    />
-                    <label :for="`${size.dimensions.width}x${size.dimensions.height}`">
-                        {{ size.dimensions.width }} x {{ size.dimensions.height }} mm - {{ size.shape }}
-                    </label>
-                </div>
-            </fieldset>
+            <h3><span class="step-number">1</span> {{ __('chooseSizeAndColor') }}</h3>
 
-            <h3>{{ __('chooseColor') }}</h3>
-            <fieldset>
-                <div v-for="color in availableColors" :key="color.name">
-                    <input type="radio" :id="color.name" name="color" :value="color.color" v-model="formValues.color" />
-                    <label :for="color.name">
-                        {{ color.name }} -
-                        <span
-                            :style="{ backgroundColor: color.color, display: 'inline-block', width: '20px', height: '20px' }"
-                        ></span>
-                    </label>
-                </div>
-            </fieldset>
+            <div class="size-and-color-container">
+                <fieldset>
+                    <div v-for="size in formFields?.sizes" :key="size.dimensions.width + size.dimensions.height">
+                        <label :for="`${size.dimensions.width}x${size.dimensions.height}`">
+                            <input
+                            type="radio"
+                            :id="`${size.dimensions.width}x${size.dimensions.height}`"
+                            name="size"
+                            :value="size"
+                            v-model="formValues.size"
+                            />
+                            {{ size.dimensions.width }} x {{ size.dimensions.height }} mm - {{ size.shape }}
+                        </label>
+                    </div>
+                </fieldset>
+    
+                <fieldset>
+                    <div v-for="color in availableColors" :key="color.name">
+                        <label :for="color.name">
+                            <input type="radio" :id="color.name" name="color" :value="color.color" v-model="formValues.color" />
+                            {{ color.name }}
+                            <span
+                                :style="{ backgroundColor: color.color, display: 'inline-block', width: '20px', height: '20px' }"
+                            ></span>
+                        </label>
+                    </div>
+                </fieldset>
+            </div>
 
-            <h3>{{ __('chooseSymbol') }}</h3>
-            <fieldset>
-                <div v-for="symbol in formFields?.symbols" :key="symbol.symbol.description">
-                    <input
-                        type="radio"
-                        :id="symbol.symbol.description"
-                        name="symbol"
-                        :value="symbol.symbol.image"
-                        v-model="formValues.symbol"
-                    />
-                    <label :for="symbol.symbol.description">
-                        <img :src="symbol.symbol.image" :alt="symbol.symbol.description" style="width: 50px; height: 50px" />
-                        {{ symbol.symbol.description }}
-                    </label>
-                </div>
-            </fieldset>
-
-            <template v-if="formValues.size">
-                <h3>{{ __('addText') }}</h3>
-                <fieldset class="text-input-section">
-                    <div v-for="(line, index) in formValues.textLines" :key="index" class="text-line">
-                        <div class="text-line-input">
-                            <label :for="`text-line-${index}`">{{ __('row') }} {{ index + 1 }}</label>
+            <!-- <template v-if="formValues.size"> -->
+                <h3><span class="step-number">2</span> {{ __('addText') }}</h3>
+                <div class="text-and-preview-container">
+                    <fieldset class="text-input-section">
+                        <div class="headers">
+                            <span></span>
+                            <span>Text</span>
+                            <span>Rak</span>
+                            <span>Kursiv</span>
+                            <span>Skrivstil</span>
+                            <span>Fetstil</span>
+                        </div>
+                        <div v-for="(line, index) in formValues.textLines" :key="index" class="text-line">
+                            <label :for="`text-line-${index}`">
+                                {{ __('row') }}
+                                <!-- {{ index + 1 }} -->
+                            </label>
                             <input
                                 type="text"
                                 :id="`text-line-${index}`"
@@ -206,135 +231,251 @@ function onTextInput(index: number, event: Event) {
                                 @input="onTextInput(index, $event)"
                                 :placeholder="__('maxChars').replace('%s', String(maxChars))"
                             />
-                            <span class="char-count">{{ line.content.length }}/{{ maxChars }}</span>
-                        </div>
-                        <div class="text-line-style">
+                            <!-- <span class="char-count">{{ line.content.length }}/{{ maxChars }}</span> -->
                             <label>
                                 <input type="radio" :name="`font-${index}`" value="sans-serif" v-model="line.fontFamily" />
-                                {{ __('sansSerif') }}
+                                <!-- {{ __('sansSerif') }} -->
                             </label>
                             <label>
                                 <input type="radio" :name="`font-${index}`" value="serif" v-model="line.fontFamily" />
-                                {{ __('serif') }}
+                                <!-- {{ __('serif') }} -->
                             </label>
                             <label>
                                 <input type="checkbox" :checked="line.fontStyle === 'italic'" @change="line.fontStyle = line.fontStyle === 'italic' ? 'normal' : 'italic'" />
-                                {{ __('italic') }}
+                                <!-- {{ __('italic') }} -->
                             </label>
                             <label>
                                 <input type="checkbox" :checked="line.fontWeight === 'bold'" @change="line.fontWeight = line.fontWeight === 'bold' ? 'normal' : 'bold'" />
-                                {{ __('bold') }}
+                                <!-- {{ __('bold') }} -->
                             </label>
                         </div>
-                    </div>
 
-                    <div class="text-alignment">
-                        <span>{{ __('textAlignment') }}</span>
-                        <label>
-                            <input type="radio" name="alignment" value="left" v-model="formValues.textAlignment" />
-                            {{ __('alignLeft') }}
-                        </label>
-                        <label>
-                            <input type="radio" name="alignment" value="center" v-model="formValues.textAlignment" />
-                            {{ __('alignCenter') }}
-                        </label>
-                        <label>
-                            <input type="radio" name="alignment" value="right" v-model="formValues.textAlignment" />
-                            {{ __('alignRight') }}
-                        </label>
+                        <div class="text-alignment">
+                            <span>{{ __('textAlignment') }}</span>
+                            <label>
+                                <input type="radio" name="alignment" value="left" v-model="formValues.textAlignment" />
+                                {{ __('alignLeft') }}
+                            </label>
+                            <label>
+                                <input type="radio" name="alignment" value="center" v-model="formValues.textAlignment" />
+                                {{ __('alignCenter') }}
+                            </label>
+                        </div>
+                    </fieldset>
+                    <div class="preview-conainer">
+                        <StickerPreview ref="previewRef" :formValues="formValues" />
+                            <div class="quantity-input">
+                            <label for="sticker-quantity">Antal</label>
+                            <input
+                                id="sticker-quantity"
+                                type="number"
+                                v-model.number="quantity"
+                                :min="formValues.size?.quantity?.min ?? 1"
+                                :max="formValues.size?.quantity?.max || undefined"
+                                :step="formValues.size?.quantity?.step ?? 1"
+                            />
+                            <span v-if="quantityError" class="quantity-error">{{ quantityError }}</span>
+                            <span v-else-if="lineTotal !== null" class="line-total">
+                                {{ lineTotal.toLocaleString('sv-SE', { style: 'currency', currency: 'SEK' }) }}
+                            </span>
+                        </div>
                     </div>
-                </fieldset>
-            </template>
+                </div>
+            <!-- </template> -->
+
+            <h3><span class="step-number">3</span> {{ __('chooseSymbol') }}</h3>
+            <fieldset class="symbol-fieldset">
+                <div
+                    v-for="symbol in formFields?.symbols"
+                    :key="symbol.symbol.description"
+                    class="symbol-tile"
+                    :class="{ selected: formValues.symbol === symbol.symbol.image }"
+                    @click="formValues.symbol = symbol.symbol.image"
+                >
+                    <input
+                        type="radio"
+                        :id="symbol.symbol.description"
+                        name="symbol"
+                        :value="symbol.symbol.image"
+                        v-model="formValues.symbol"
+                    />
+                    <img :src="symbol.symbol.image" :alt="symbol.symbol.description" />
+                    <button
+                        v-if="formValues.symbol === symbol.symbol.image"
+                        type="button"
+                        class="symbol-deselect"
+                        @click.stop="formValues.symbol = ''"
+                        aria-label="Avmarkera symbol"
+                    >&#x2715;</button>
+                </div>
+            </fieldset>
 
             <div class="form-actions">
-                <button type="submit">{{ isEditing ? __('save') : __('saveAndAddToCart') }}</button>
-                <button v-if="isEditing" type="button" @click="onSaveAsNew">{{ __('saveAsNewAndAddToCart') }}</button>
+                <button type="submit" :disabled="!!quantityError">{{ isEditing ? __('save') : __('saveAndAddToCart') }}</button>
+                <button v-if="isEditing" type="button" @click="onSaveAsNew" :disabled="!!quantityError">{{ __('saveAsNewAndAddToCart') }}</button>
                 <button v-if="isEditing" type="button" @click="onCreateNew">{{ __('createNew') }}</button>
             </div>
         </form>
 
-        <StickerPreview ref="previewRef" :formValues="formValues" />
     </div>
 </template>
 
-<style scoped>
-.sticker-form-container {
+<style lang="scss" scoped>
+// Colors
+$color-primary: #e5392a;
+$color-accent: #e5392a;
+$color-accent-light: #fce8e6;
+$color-step-line: #e0e0e0;
+$color-white: #fff;
+
+form {
+    padding-left: 80px;
+    fieldset {
+        // Reset
+        border: none;
+        margin: 0;
+        padding: 0;
+    }
+    h3 {
+        position: relative;
+        .step-number {
+            position: absolute;
+            left: -40px;
+            top: 0;
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            background-color: $color-primary;
+            color: $color-white;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 14px;
+            &::after {
+                // Add a dashed line connecting the step number to the fieldset
+                content: '';
+                width: 0;
+                height: 9999rem;
+                left: 50%;
+                border-left: 2px dashed $color-step-line;
+                z-index: -1;
+                top: 1em;
+                position: absolute;
+            }
+        }
+    }
+}
+.size-and-color-container {
+    display: flex;
+    gap: 4rem;
+    margin-bottom: 2rem;
+}
+.text-and-preview-container {
     display: flex;
     gap: 2rem;
-    flex-wrap: wrap;
+    margin-bottom: 2rem;
+    fieldset {
+        width: 50%;
+        min-width: 35em;
+    }
+    .preview-conainer {
+        width: 50%;
+    }
+    .headers,
+    .text-line {
+        display: grid;
+        grid-template-columns: 3em 1fr repeat(4, 5em);
+        align-items: center;
+        gap: 0.5rem;
+    }
+    .headers {
+        span {
+            text-align: center;
+            font-weight: bold;
+            &:first-child {
+                text-align: left;
+            }
+            &:nth-child(2) {
+                text-align: left;
+            }
+        }
+    }
+    .text-line {
+        &:not(:first-child) {
+            margin-top: 1rem;
+        }
+        label {
+            font-weight: bold;
+            &:not(:first-child) {
+                display: flex;
+                justify-content: center;
+            }
+        }
+    }
+    .text-alignment {
+        margin-top: 1.5rem;
+        display: flex;
+        align-items: center;
+        gap: 2rem;
+        & > span {
+            font-weight: bold;
+            margin-right: 1rem;
+        }
+    }
 }
-
-.sticker-form {
-    flex: 1;
-    min-width: 300px;
-}
-
-:deep(.sticker-preview) {
-    position: sticky;
-    top: 1rem;
-    align-self: flex-start;
-}
-
-.text-input-section {
+.symbol-fieldset {
     display: flex;
-    flex-direction: column;
+    flex-wrap: wrap;
     gap: 1rem;
 }
-
-.text-line {
-    border: 1px solid #eee;
-    padding: 0.75rem;
+.symbol-tile {
+    position: relative;
+    width: 90px;
+    height: 90px;
+    border: 2px solid transparent;
     border-radius: 4px;
-}
-
-.text-line-input {
+    cursor: pointer;
     display: flex;
     align-items: center;
-    gap: 0.5rem;
-    margin-bottom: 0.5rem;
-}
+    justify-content: center;
+    transition: border-color 0.15s;
 
-.text-line-input input[type='text'] {
-    flex: 1;
-    padding: 0.5rem;
-}
+    input[type="radio"] {
+        display: none;
+    }
 
-.char-count {
-    font-size: 0.8rem;
-    color: #666;
-    min-width: 50px;
-}
+    img {
+        width: 60px;
+        height: 60px;
+        object-fit: contain;
+        pointer-events: none;
+    }
 
-.text-line-style {
-    display: flex;
-    gap: 1rem;
-    flex-wrap: wrap;
-}
+    &:hover {
+        border-color: $color-accent;
+    }
 
-.text-line-style label {
+    &.selected {
+        border-color: $color-accent;
+        box-shadow: 0 0 0 3px $color-accent-light;
+    }
+}
+.symbol-deselect {
+    position: absolute;
+    top: -10px;
+    right: -10px;
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    border: 2px solid $color-accent;
+    background: $color-white;
+    color: $color-accent;
+    font-size: 11px;
+    line-height: 1;
+    cursor: pointer;
     display: flex;
     align-items: center;
-    gap: 0.25rem;
-}
-
-.text-alignment {
-    display: flex;
-    align-items: center;
-    gap: 1rem;
-    padding-top: 0.5rem;
-    border-top: 1px solid #eee;
-}
-
-.text-alignment label {
-    display: flex;
-    align-items: center;
-    gap: 0.25rem;
-}
-
-.form-actions {
-    display: flex;
-    gap: 0.5rem;
-    flex-wrap: wrap;
-    margin-top: 1rem;
+    justify-content: center;
+    padding: 0;
 }
 </style>

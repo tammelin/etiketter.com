@@ -3,6 +3,12 @@ export interface Dimensions {
     height: string;
 }
 
+export interface SizeQuantityRules {
+    min: number;
+    max: number | '';
+    step: number;
+}
+
 export interface Size {
     dimensions: Dimensions;
     shape: string;
@@ -10,6 +16,9 @@ export interface Size {
     max_rows?: number;
     max_chars?: number;
     colors?: Color[];
+    quantity: SizeQuantityRules;
+    unit_price: number;
+    base_price: number;
 }
 
 export interface Color {

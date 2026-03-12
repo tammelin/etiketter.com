@@ -138,10 +138,28 @@ class Templ_Stickers {
         $sizes = get_field('sizes', 'option') ?: [];
 
         // If a size has no per-size colors defined, fall back to global colors
+        // Also attach quantity rules from the product-quantity plugin
         foreach ($sizes as &$size) {
             if (empty($size['colors'])) {
                 $size['colors'] = $global_colors;
             }
+            $pid = isset($size['product']) ? (int) $size['product'] : 0;
+            $qty_type = get_post_meta($pid, 'wpq_simpleproduct_quantitytype_select', true);
+            if ($qty_type === 'step_quantity') {
+                $qty_min  = (int) get_post_meta($pid, 'wpq_simpleproduct_min_input_step', true) ?: 1;
+                $qty_max  = (int) get_post_meta($pid, 'wpq_simpleproduct_max_input_step', true) ?: '';
+            } else {
+                $qty_min  = (int) get_post_meta($pid, 'wpq_simpleproduct_min_input_default', true) ?: 1;
+                $qty_max  = (int) get_post_meta($pid, 'wpq_simpleproduct_max_input_default', true) ?: '';
+            }
+            $size['quantity'] = [
+                'min'  => $qty_min,
+                'max'  => $qty_max,
+                'step' => (int) get_post_meta($pid, 'wpq_simpleproduct_step_input', true) ?: 1,
+            ];
+            $wc_product = $pid ? wc_get_product($pid) : null;
+            $size['unit_price'] = $wc_product ? (float) $wc_product->get_price('edit') : 0;
+            $size['base_price'] = $pid ? (float) get_field('base_price', $pid) : 0;
         }
         unset($size);
 

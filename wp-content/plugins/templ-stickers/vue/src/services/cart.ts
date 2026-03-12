@@ -1,9 +1,9 @@
 import type { CartResponse } from '@/types';
 
-export async function addToCart(productId: number, stickerUuid: string): Promise<CartResponse> {
+export async function addToCart(productId: number, stickerUuid: string, quantity: number): Promise<CartResponse> {
     const formData = new FormData();
     formData.append('product_id', String(productId));
-    formData.append('quantity', '1');
+    formData.append('quantity', String(quantity));
     formData.append('sticker_uuid', stickerUuid);
 
     const response = await fetch('/?wc-ajax=add_to_cart', {
