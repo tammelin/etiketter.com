@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed, watch, useTemplateRef } from 'vue';
+import { ref, computed, watch, nextTick, useTemplateRef } from 'vue';
 import type { FormValues } from '@/types';
 import { generateStickerSVGWithInlinedSymbol } from '@/services/svgGenerator';
 
@@ -54,6 +54,29 @@ watch(
             textLines: newValues.textLines,
             textAlignment: newValues.textAlignment,
         });
+
+        // After render: measure text widths and shrink font size if any line overflows
+        await nextTick();
+        const svgEl = wrapperRef.value?.querySelector('svg');
+        if (svgEl) {
+            const sideLayout = newValues.symbol && newValues.size.shape.toLowerCase() !== 'rund' && newValues.size.shape.toLowerCase() !== 'oval';
+            const symbolAreaWidth = sideLayout ? parseInt(newValues.size.dimensions.width, 10) * 0.35 : 0;
+            const usableWidth = (parseInt(newValues.size.dimensions.width, 10) - symbolAreaWidth) * 0.8;
+
+            const textEls = Array.from(svgEl.querySelectorAll<SVGTextElement>('text'));
+            if (textEls.length) {
+                const maxTextWidth = Math.max(...textEls.map(el => el.getBBox().width));
+                if (maxTextWidth > usableWidth) {
+                    const scale = usableWidth / maxTextWidth;
+                    textEls.forEach(el => {
+                        const current = parseFloat(el.getAttribute('font-size') || '6');
+                        el.setAttribute('font-size', String(Math.max(1, current * scale)));
+                    });
+                    // Serialize the adjusted SVG back so getSvgContent() returns the fitted version
+                    svgContent.value = wrapperRef.value!.innerHTML;
+                }
+            }
+        }
     },
     { deep: true, immediate: true }
 );

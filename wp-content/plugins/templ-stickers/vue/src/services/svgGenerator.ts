@@ -1,5 +1,4 @@
 import type { Size, TextLine, TextAlignment } from '@/types';
-import { getLineHeightMm, getVerticalPaddingMm } from '@/utils/textCalculations';
 
 export interface StickerDesign {
     size: Size;
@@ -124,22 +123,29 @@ function generateTextElements(
 ): string {
     if (!textLines.length) return '';
 
-    const lineHeight = getLineHeightMm();
-    const verticalPadding = getVerticalPaddingMm();
-
     // Trim leading and trailing empty lines, keep internal empty lines as spacers
     let first = textLines.findIndex(l => l.content.trim() !== '');
     let last = [...textLines].reverse().findIndex(l => l.content.trim() !== '');
     if (first === -1) return ''; // all empty
     const activeLines = textLines.slice(first, textLines.length - last);
 
-    // Text area bounds
+    // Text area bounds (10% padding on each side)
     const textAreaLeft = textLeft;
     const textAreaWidth = width - textLeft;
     const textAreaTop = symbolBottom > 0 ? symbolBottom : 0;
     const textAreaHeight = height - textAreaTop;
+    const paddingFraction = 0.1;
+    const usableHeight = textAreaHeight * (1 - paddingFraction * 2);
+
+    // Scale font size so all lines fit vertically; cap at 6mm
+    const LINE_HEIGHT_RATIO = 1.3;
+    const maxFontSize = 6;
+    const fontSize = Math.max(1, Math.min(maxFontSize, usableHeight / (activeLines.length * LINE_HEIGHT_RATIO)));
+    const lineHeight = fontSize * LINE_HEIGHT_RATIO;
+
     const totalTextHeight = activeLines.length * lineHeight;
-    const startY = textAreaTop + (textAreaHeight - totalTextHeight) / 2 + lineHeight / 2 + verticalPadding / 2;
+    // Center the text block within the usable area
+    const startY = textAreaTop + textAreaHeight * paddingFraction + (usableHeight - totalTextHeight) / 2 + lineHeight * 0.8;
 
     // Map alignment to SVG text-anchor
     const textAnchor = alignment === 'left' ? 'start' : alignment === 'right' ? 'end' : 'middle';
@@ -153,7 +159,7 @@ function generateTextElements(
 
     return activeLines
         .map((line, index) => {
-            if (!line.content.trim()) return `<text x="${x}" y="${startY + index * lineHeight}" font-size="6"> </text>`;
+            if (!line.content.trim()) return `<text x="${x}" y="${startY + index * lineHeight}" font-size="${fontSize}"> </text>`;
 
             const y = startY + index * lineHeight;
             let fontFamily: string;
@@ -177,7 +183,7 @@ function generateTextElements(
     font-family="${fontFamily}"
     font-style="${fontStyle}"
     font-weight="${fontWeight}"
-    font-size="6"
+    font-size="${fontSize}"
     fill="#000000"
   >${escapeXml(line.content)}</text>`;
         })
