@@ -59,7 +59,8 @@ const quantityError = computed(() => {
 const lineTotal = computed(() => {
     const size = formValues.value.size;
     if (!size) return null;
-    return size.unit_price * quantity.value + size.base_price;
+    const symbolPrice = formValues.value.symbol ? (formFields.value?.symbol_price ?? 0) : 0;
+    return size.unit_price * quantity.value + symbolPrice;
 });
 
 // Watch for size changes to update text lines array (and reset quantity)
@@ -292,7 +293,7 @@ function onTextInput(index: number, event: Event) {
                 </div>
             <!-- </template> -->
 
-            <h3><span class="step-number">3</span> {{ __('chooseSymbol') }}</h3>
+            <h3><span class="step-number">3</span> {{ __('chooseSymbol') }}<span v-if="formFields?.symbol_price" class="symbol-price"> +{{ formFields.symbol_price.toLocaleString('sv-SE', { style: 'currency', currency: 'SEK' }) }}</span></h3>
             <fieldset class="symbol-fieldset">
                 <div
                     v-for="symbol in formFields?.symbols"
@@ -336,6 +337,13 @@ $color-accent: #e5392a;
 $color-accent-light: #fce8e6;
 $color-step-line: #e0e0e0;
 $color-white: #fff;
+
+.symbol-price {
+    font-size: 0.75em;
+    font-weight: normal;
+    color: #666;
+    margin-left: 0.5em;
+}
 
 form {
     padding-left: 80px;

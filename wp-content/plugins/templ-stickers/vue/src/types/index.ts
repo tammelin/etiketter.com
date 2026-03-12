@@ -18,7 +18,6 @@ export interface Size {
     colors?: Color[];
     quantity: SizeQuantityRules;
     unit_price: number;
-    base_price: number;
 }
 
 export interface Color {
@@ -37,6 +36,7 @@ export interface FormFields {
     sizes: Size[];
     colors: Color[];
     symbols: Symbol[];
+    symbol_price: number;
 }
 
 export interface TextLine {

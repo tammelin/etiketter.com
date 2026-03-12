@@ -4,11 +4,11 @@
     "fields": [
         {
             "key": "field_69b2927cb66af",
-            "label": "Grundkostnad",
-            "name": "base_price",
+            "label": "Symbolpris",
+            "name": "symbol_price",
             "aria-label": "",
             "type": "number",
-            "instructions": "",
+            "instructions": "Tilläggspris när kunden väljer en symbol",
             "required": 0,
             "conditional_logic": 0,
             "wrapper": {
@@ -29,9 +29,9 @@
     "location": [
         [
             {
-                "param": "post_type",
+                "param": "options_page",
                 "operator": "==",
-                "value": "product"
+                "value": "sticker_options_page"
             }
         ]
     ],
@@ -45,5 +45,5 @@
     "description": "",
     "show_in_rest": 0,
     "display_title": "",
-    "modified": 1773310666
+    "modified": 1741046400
 }

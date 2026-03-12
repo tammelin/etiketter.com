@@ -38,8 +38,6 @@ class Templ_Stickers {
         add_filter('woocommerce_order_item_display_meta_key', [$this, 'custom_order_item_meta_key'], 10, 3);
         add_filter('woocommerce_order_item_display_meta_value', [$this, 'custom_order_item_meta_value'], 10, 3);
 
-        // Add ACF base_price as a flat fee per cart line item (not multiplied by quantity)
-        add_action('woocommerce_before_calculate_totals', [$this, 'add_base_price_to_cart_item'], 10, 1);
 
         // Link order to sticker posts when order is created
         add_action('woocommerce_new_order', [$this, 'link_order_to_stickers']);
@@ -223,14 +221,14 @@ class Templ_Stickers {
             ];
             $wc_product = $pid ? wc_get_product($pid) : null;
             $size['unit_price'] = $wc_product ? (float) $wc_product->get_price('edit') : 0;
-            $size['base_price'] = $pid ? (float) get_field('base_price', $pid) : 0;
         }
         unset($size);
 
         $fields = [
-            'sizes'   => $sizes,
-            'colors'  => $global_colors,
-            'symbols' => get_field('symbols', 'option'),
+            'sizes'        => $sizes,
+            'colors'       => $global_colors,
+            'symbols'      => get_field('symbols', 'option'),
+            'symbol_price' => (float) get_field('symbol_price', 'option'),
         ];
         return $fields;
     }
@@ -721,24 +719,6 @@ class Templ_Stickers {
             'post_id' => $post->ID,
             'data' => json_decode($post->post_content, true),
         ];
-    }
-
-    /**
-     * Add ACF base_price as a flat fee per cart line (not multiplied by quantity).
-     * Achieved by setting the cart item price to: (unit_price * qty + base_price) / qty,
-     * so WooCommerce's qty multiplication yields the correct line total.
-     */
-    function add_base_price_to_cart_item(WC_Cart $cart): void {
-        foreach ($cart->get_cart() as $cart_item) {
-            $product    = $cart_item['data'];
-            $base_price = (float) get_field('base_price', $product->get_id());
-            if ($base_price <= 0) {
-                continue;
-            }
-            $qty        = (int) $cart_item['quantity'];
-            $unit_price = (float) wc_get_product($product->get_id())->get_price('edit');
-            $product->set_price(($unit_price * $qty + $base_price) / $qty);
-        }
     }
 
     function register_routes(): void {
