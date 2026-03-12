@@ -187,7 +187,7 @@ function onTextInput(index: number, event: Event) {
                             :value="size"
                             v-model="formValues.size"
                             />
-                            {{ size.dimensions.width }} x {{ size.dimensions.height }} mm - {{ size.shape }}
+                            {{ size.dimensions.width }} x {{ size.dimensions.height }} mm<template v-if="size.shape !== 'rectangular'"> - {{ __('shape' + size.shape.charAt(0).toUpperCase() + size.shape.slice(1)) }}</template>
                         </label>
                     </div>
                 </fieldset>

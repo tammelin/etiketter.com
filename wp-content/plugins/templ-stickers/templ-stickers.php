@@ -94,6 +94,61 @@ class Templ_Stickers {
 
     }
 
+    private function get_font_css(): string {
+        $fonts_dir = TEMPL_STICKERS_PLUGIN_DIR . 'fonts/';
+        $faces = [
+            [
+                'family' => 'Ubuntu',
+                'weight' => 'normal',
+                'style'  => 'normal',
+                'file'   => 'Ubuntu/Ubuntu-Regular.ttf',
+                'format' => 'truetype',
+            ],
+            [
+                'family' => 'Ubuntu',
+                'weight' => 'bold',
+                'style'  => 'normal',
+                'file'   => 'Ubuntu/Ubuntu-Bold.ttf',
+                'format' => 'truetype',
+            ],
+            [
+                'family' => 'Ubuntu',
+                'weight' => 'normal',
+                'style'  => 'italic',
+                'file'   => 'Ubuntu/Ubuntu-Italic.ttf',
+                'format' => 'truetype',
+            ],
+            [
+                'family' => 'Ubuntu',
+                'weight' => 'bold',
+                'style'  => 'italic',
+                'file'   => 'Ubuntu/Ubuntu-BoldItalic.ttf',
+                'format' => 'truetype',
+            ],
+            [
+                'family' => 'Cataneo',
+                'weight' => 'normal',
+                'style'  => 'italic',
+                'file'   => 'Cataneo/Cataneo-Regular.otf',
+                'format' => 'opentype',
+            ],
+        ];
+
+        $css = '';
+        foreach ($faces as $face) {
+            $path = $fonts_dir . $face['file'];
+            if (!file_exists($path)) continue;
+            $data = base64_encode(file_get_contents($path));
+            $css .= "@font-face{"
+                . "font-family:'{$face['family']}';"
+                . "font-weight:{$face['weight']};"
+                . "font-style:{$face['style']};"
+                . "src:url('data:font/{$face['format']};base64,{$data}') format('{$face['format']}');"
+                . "}";
+        }
+        return $css;
+    }
+
     public function print_i18n_inline_script(): void {
         $i18n = [
             'chooseSizeAndColor'   => __('Size and color', 'templ-stickers'),
@@ -115,12 +170,16 @@ class Templ_Stickers {
             'confirmCreateNew'     => __('Do you want to create a new sticker? Unsaved changes will be lost.', 'templ-stickers'),
             'maxChars'             => __('Max %s characters', 'templ-stickers'),
             'columnText'           => __('Text', 'templ-stickers'),
-            'columnStraight'       => __('Rak', 'templ-stickers'),
-            'columnItalic'         => __('Kursiv', 'templ-stickers'),
-            'columnCursive'        => __('Skrivstil', 'templ-stickers'),
-            'columnBold'           => __('Fetstil', 'templ-stickers'),
+            'columnStraight'       => __('Straight', 'templ-stickers'),
+            'columnItalic'         => __('Italic', 'templ-stickers'),
+            'columnCursive'        => __('Cursive', 'templ-stickers'),
+            'columnBold'           => __('Bold', 'templ-stickers'),
+            'shapeRectangular'     => __('Rectangular', 'templ-stickers'),
+            'shapeOval'            => __('Oval', 'templ-stickers'),
+            'shapeRound'           => __('Round', 'templ-stickers'),
         ];
-        echo '<script>window.templStickersI18n = ' . wp_json_encode($i18n) . ';</script>' . "\n";
+        $font_css = $this->get_font_css();
+        echo '<script>window.templStickersI18n = ' . wp_json_encode($i18n) . ';window.templStickersFontCSS = ' . wp_json_encode($font_css) . ';</script>' . "\n";
     }
 
     // Add type="module" to script tag

@@ -104,9 +104,9 @@
                         "id": ""
                     },
                     "choices": {
-                        "Rektangulär": "Rektangulär",
-                        "Oval": "Oval",
-                        "Rund": "Rund"
+                        "rectangular": "Rectangular",
+                        "oval": "Oval",
+                        "round": "Round"
                     },
                     "default_value": "",
                     "return_format": "value",

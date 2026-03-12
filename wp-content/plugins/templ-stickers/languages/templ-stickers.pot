@@ -9,7 +9,7 @@ msgstr ""
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"POT-Creation-Date: 2026-01-28T13:11:04+00:00\n"
+"POT-Creation-Date: 2026-03-12T13:35:24+00:00\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "X-Generator: WP-CLI 2.12.0\n"
 "X-Domain: templ-stickers\n"
@@ -34,109 +34,141 @@ msgstr ""
 msgid "https://templ.io"
 msgstr ""
 
-#: templ-stickers.php:61
-msgid "Select size"
+#: templ-stickers.php:154
+msgid "Size and color"
 msgstr ""
 
-#: templ-stickers.php:62
-msgid "Select color"
-msgstr ""
-
-#: templ-stickers.php:63
+#: templ-stickers.php:155
 msgid "Select symbol"
 msgstr ""
 
-#: templ-stickers.php:64
+#: templ-stickers.php:156
 msgid "Add text"
 msgstr ""
 
-#: templ-stickers.php:65
+#: templ-stickers.php:157
 msgid "Line"
 msgstr ""
 
-#: templ-stickers.php:66
+#: templ-stickers.php:158
 msgid "Sans-serif"
 msgstr ""
 
-#: templ-stickers.php:67
+#: templ-stickers.php:159
 msgid "Serif"
 msgstr ""
 
-#: templ-stickers.php:68
+#: templ-stickers.php:160
+#: templ-stickers.php:174
 msgid "Italic"
 msgstr ""
 
-#: templ-stickers.php:69
+#: templ-stickers.php:161
+#: templ-stickers.php:176
 msgid "Bold"
 msgstr ""
 
-#: templ-stickers.php:70
-msgid "Text alignment:"
+#: templ-stickers.php:162
+msgid "Text alignment"
 msgstr ""
 
-#: templ-stickers.php:71
+#: templ-stickers.php:163
 msgid "Left"
 msgstr ""
 
-#: templ-stickers.php:72
+#: templ-stickers.php:164
 msgid "Center"
 msgstr ""
 
-#: templ-stickers.php:73
+#: templ-stickers.php:165
 msgid "Right"
 msgstr ""
 
-#: templ-stickers.php:74
+#: templ-stickers.php:166
 msgid "Save"
 msgstr ""
 
-#: templ-stickers.php:75
+#: templ-stickers.php:167
 msgid "Save and add to cart"
 msgstr ""
 
-#: templ-stickers.php:76
+#: templ-stickers.php:168
 msgid "Save as new and add to cart"
 msgstr ""
 
-#: templ-stickers.php:77
+#: templ-stickers.php:169
 msgid "Create new sticker"
 msgstr ""
 
-#: templ-stickers.php:78
+#: templ-stickers.php:170
 msgid "Do you want to create a new sticker? Unsaved changes will be lost."
 msgstr ""
 
-#: templ-stickers.php:79
+#: templ-stickers.php:171
 #, php-format
 msgid "Max %s characters"
 msgstr ""
 
-#: templ-stickers.php:132
+#: templ-stickers.php:172
+msgid "Text"
+msgstr ""
+
+#: templ-stickers.php:173
+msgid "Straight"
+msgstr ""
+
+#: templ-stickers.php:175
+msgid "Cursive"
+msgstr ""
+
+#: templ-stickers.php:177
+msgid "Rectangular"
+msgstr ""
+
+#: templ-stickers.php:178
+msgid "Oval"
+msgstr ""
+
+#: templ-stickers.php:179
+msgid "Round"
+msgstr ""
+
+#: templ-stickers.php:247
 msgid "Sticker Order"
 msgstr ""
 
-#: templ-stickers.php:221
+#: templ-stickers.php:336
 msgid "Edit sticker"
 msgstr ""
 
-#: templ-stickers.php:289
-#: templ-stickers.php:290
-#: templ-stickers.php:313
+#: templ-stickers.php:449
+#: templ-stickers.php:450
+#: templ-stickers.php:477
+#: templ-stickers.php:495
+#: templ-stickers.php:617
 msgid "Sticker preview"
 msgstr ""
 
-#: templ-stickers.php:321
+#: templ-stickers.php:503
 msgid "Sticker"
 msgstr ""
 
-#: templ-stickers.php:349
+#: templ-stickers.php:534
 msgid "Sticker Preview"
 msgstr ""
 
-#: templ-stickers.php:368
+#: templ-stickers.php:553
 msgid "Download SVG"
 msgstr ""
 
-#: templ-stickers.php:370
+#: templ-stickers.php:555
 msgid "No SVG preview available for this sticker."
+msgstr ""
+
+#: templ-stickers.php:599
+msgid "Preview"
+msgstr ""
+
+#: templ-stickers.php:603
+msgid "Order"
 msgstr ""

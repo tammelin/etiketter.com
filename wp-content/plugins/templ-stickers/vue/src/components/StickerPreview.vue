@@ -19,7 +19,7 @@ const svgDisplayWidth = computed(() =>
 
 const borderRadius = computed(() => {
     const s = currentShape.value.toLowerCase();
-    if (s === 'rund' || s === 'round') return '50%';
+    if (s === 'round') return '50%';
     if (s === 'oval' || s === 'ellipse') return '50%';
     return '0px';
 });
@@ -59,7 +59,7 @@ watch(
         await nextTick();
         const svgEl = wrapperRef.value?.querySelector('svg');
         if (svgEl) {
-            const sideLayout = newValues.symbol && newValues.size.shape.toLowerCase() !== 'rund' && newValues.size.shape.toLowerCase() !== 'oval';
+            const sideLayout = newValues.symbol && newValues.size.shape.toLowerCase() !== 'round' && newValues.size.shape.toLowerCase() !== 'oval';
             const symbolAreaWidth = sideLayout ? parseInt(newValues.size.dimensions.width, 10) * 0.35 : 0;
             const usableWidth = (parseInt(newValues.size.dimensions.width, 10) - symbolAreaWidth) * 0.8;
 

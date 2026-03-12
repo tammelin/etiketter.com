@@ -53,7 +53,7 @@ export async function fetchSvgContent(url: string): Promise<string> {
  */
 function isRoundShape(shape: string): boolean {
     const s = shape.toLowerCase();
-    return s === 'rund' || s === 'round' || s === 'oval' || s === 'ellipse';
+    return s === 'round' || s === 'oval' || s === 'ellipse';
 }
 
 export async function generateStickerSVGWithInlinedSymbol(design: StickerDesign): Promise<string> {
@@ -81,7 +81,11 @@ export async function generateStickerSVGWithInlinedSymbol(design: StickerDesign)
         }
     }
 
+    const fontCSS: string = (window as any).templStickersFontCSS ?? '';
+    const defs = fontCSS ? `<defs><style>${fontCSS}</style></defs>` : '';
+
     return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${width} ${height}">
+  ${defs}
   ${shapeElement}
   ${symbolElement}
   ${textElements}
@@ -94,7 +98,7 @@ export async function generateStickerSVGWithInlinedSymbol(design: StickerDesign)
 function generateShape(shape: string, width: number, height: number, color: string): string {
     const normalizedShape = shape.toLowerCase();
 
-    if (normalizedShape === 'rund' || normalizedShape === 'round') {
+    if (normalizedShape === 'round') {
         const radius = Math.min(width, height) / 2;
         const cx = width / 2;
         const cy = height / 2;
