@@ -196,7 +196,7 @@
                     },
                     "default_value": 3,
                     "min": 1,
-                    "max": 10,
+                    "max": "",
                     "allow_in_bindings": 0,
                     "placeholder": "",
                     "step": 1,
