@@ -132,9 +132,20 @@ class Templ_Stickers {
     }
 
     function get_form_fields(): array {
+        $global_colors = get_field('colors', 'option') ?: [];
+        $sizes = get_field('sizes', 'option') ?: [];
+
+        // If a size has no per-size colors defined, fall back to global colors
+        foreach ($sizes as &$size) {
+            if (empty($size['colors'])) {
+                $size['colors'] = $global_colors;
+            }
+        }
+        unset($size);
+
         $fields = [
-            'sizes' => get_field('sizes', 'option'),
-            'colors' => get_field('colors', 'option'),
+            'sizes'   => $sizes,
+            'colors'  => $global_colors,
             'symbols' => get_field('symbols', 'option'),
         ];
         return $fields;

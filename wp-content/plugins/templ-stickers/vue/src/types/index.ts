@@ -9,6 +9,7 @@ export interface Size {
     product: number;
     max_rows?: number;
     max_chars?: number;
+    colors?: Color[];
 }
 
 export interface Color {

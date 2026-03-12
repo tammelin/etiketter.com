@@ -30,6 +30,13 @@ const formValues = ref<FormValues>({
     textAlignment: 'center',
 });
 
+// Colors available for the selected size (falls back to global list)
+const availableColors = computed(() =>
+    formValues.value.size?.colors?.length
+        ? formValues.value.size.colors
+        : formFields.value?.colors ?? []
+);
+
 // Calculate max chars based on selected size
 const maxChars = computed(() => {
     if (!formValues.value.size) return 0;
@@ -45,6 +52,12 @@ watch(
         if (!newSize) {
             formValues.value.textLines = [];
             return;
+        }
+
+        // Reset color if it's not available for the new size
+        const colors = newSize.colors?.length ? newSize.colors : formFields.value?.colors ?? [];
+        if (formValues.value.color && !colors.find(c => c.color === formValues.value.color)) {
+            formValues.value.color = '';
         }
 
         const newMaxLines = newSize.max_rows ?? calculateMaxLines(parseInt(newSize.dimensions.height, 10));
@@ -151,7 +164,7 @@ function onTextInput(index: number, event: Event) {
 
             <h3>{{ __('chooseColor') }}</h3>
             <fieldset>
-                <div v-for="color in formFields?.colors" :key="color.name">
+                <div v-for="color in availableColors" :key="color.name">
                     <input type="radio" :id="color.name" name="color" :value="color.color" v-model="formValues.color" />
                     <label :for="color.name">
                         {{ color.name }} -
