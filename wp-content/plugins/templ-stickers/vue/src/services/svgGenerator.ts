@@ -150,15 +150,27 @@ function generateTextElements(
             if (!line.content.trim()) return '';
 
             const y = startY + index * lineHeight;
-            const fontFamily = line.fontFamily === 'serif' ? 'Georgia, serif' : 'Arial, sans-serif';
+            let fontFamily: string;
+            let fontStyle: string;
+            let fontWeight: string;
+
+            if (line.textStyle === 'cursive') {
+                fontFamily = "'Cataneo', cursive";
+                fontStyle = 'italic';
+                fontWeight = line.fontWeight === 'bold' ? 'bold' : 'normal';
+            } else {
+                fontFamily = 'Ubuntu, sans-serif';
+                fontStyle = line.textStyle === 'italic' ? 'italic' : 'normal';
+                fontWeight = line.fontWeight === 'bold' ? '700' : 'normal';
+            }
 
             return `<text
     x="${x}"
     y="${y}"
     text-anchor="${textAnchor}"
     font-family="${fontFamily}"
-    font-style="${line.fontStyle}"
-    font-weight="${line.fontWeight}"
+    font-style="${fontStyle}"
+    font-weight="${fontWeight}"
     font-size="6"
     fill="#000000"
   >${escapeXml(line.content)}</text>`;

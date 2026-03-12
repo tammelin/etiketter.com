@@ -16,8 +16,7 @@ const previewRef = ref<InstanceType<typeof StickerPreview> | null>(null);
 function createDefaultTextLine(): TextLine {
     return {
         content: '',
-        fontFamily: 'sans-serif',
-        fontStyle: 'normal',
+        textStyle: 'straight',
         fontWeight: 'normal',
     };
 }
@@ -212,11 +211,11 @@ function onTextInput(index: number, event: Event) {
                     <fieldset class="text-input-section">
                         <div class="headers">
                             <span></span>
-                            <span>Text</span>
-                            <span>Rak</span>
-                            <span>Kursiv</span>
-                            <span>Skrivstil</span>
-                            <span>Fetstil</span>
+                            <span>{{ __('columnText') }}</span>
+                            <span>{{ __('columnStraight') }}</span>
+                            <span>{{ __('columnItalic') }}</span>
+                            <span>{{ __('columnCursive') }}</span>
+                            <span>{{ __('columnBold') }}</span>
                         </div>
                         <div v-for="(line, index) in formValues.textLines" :key="index" class="text-line">
                             <label :for="`text-line-${index}`">
@@ -233,20 +232,20 @@ function onTextInput(index: number, event: Event) {
                             />
                             <!-- <span class="char-count">{{ line.content.length }}/{{ maxChars }}</span> -->
                             <label>
-                                <input type="radio" :name="`font-${index}`" value="sans-serif" v-model="line.fontFamily" />
-                                <!-- {{ __('sansSerif') }} -->
+                                <input type="radio" :name="`font-${index}`" value="straight" v-model="line.textStyle" />
+                                <!-- {{ __('columnStraight') }} -->
                             </label>
                             <label>
-                                <input type="radio" :name="`font-${index}`" value="serif" v-model="line.fontFamily" />
-                                <!-- {{ __('serif') }} -->
+                                <input type="radio" :name="`font-${index}`" value="italic" v-model="line.textStyle" />
+                                <!-- {{ __('columnItalic') }} -->
                             </label>
                             <label>
-                                <input type="checkbox" :checked="line.fontStyle === 'italic'" @change="line.fontStyle = line.fontStyle === 'italic' ? 'normal' : 'italic'" />
-                                <!-- {{ __('italic') }} -->
+                                <input type="radio" :name="`font-${index}`" value="cursive" v-model="line.textStyle" />
+                                <!-- {{ __('columnCursive') }} -->
                             </label>
                             <label>
                                 <input type="checkbox" :checked="line.fontWeight === 'bold'" @change="line.fontWeight = line.fontWeight === 'bold' ? 'normal' : 'bold'" />
-                                <!-- {{ __('bold') }} -->
+                                <!-- {{ __('columnBold') }} -->
                             </label>
                         </div>
 

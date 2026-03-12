@@ -114,6 +114,11 @@ class Templ_Stickers {
             'createNew'            => __('Create new sticker', 'templ-stickers'),
             'confirmCreateNew'     => __('Do you want to create a new sticker? Unsaved changes will be lost.', 'templ-stickers'),
             'maxChars'             => __('Max %s characters', 'templ-stickers'),
+            'columnText'           => __('Text', 'templ-stickers'),
+            'columnStraight'       => __('Rak', 'templ-stickers'),
+            'columnItalic'         => __('Kursiv', 'templ-stickers'),
+            'columnCursive'        => __('Skrivstil', 'templ-stickers'),
+            'columnBold'           => __('Fetstil', 'templ-stickers'),
         ];
         echo '<script>window.templStickersI18n = ' . wp_json_encode($i18n) . ';</script>' . "\n";
     }

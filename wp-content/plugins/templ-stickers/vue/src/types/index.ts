@@ -41,8 +41,7 @@ export interface FormFields {
 
 export interface TextLine {
     content: string;
-    fontFamily: 'serif' | 'sans-serif';
-    fontStyle: 'normal' | 'italic';
+    textStyle: 'straight' | 'italic' | 'cursive';
     fontWeight: 'normal' | 'bold';
 }
 
