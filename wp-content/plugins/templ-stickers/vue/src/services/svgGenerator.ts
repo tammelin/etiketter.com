@@ -60,7 +60,7 @@ function isRoundShape(shape: string): boolean {
 export async function generateStickerSVGWithInlinedSymbol(design: StickerDesign): Promise<string> {
     const width = parseInt(design.size.dimensions.width, 10);
     const height = parseInt(design.size.dimensions.height, 10);
-    const sideLayout = design.symbol ? isRoundShape(design.size.shape) : false;
+    const sideLayout = design.symbol ? !isRoundShape(design.size.shape) : false;
 
     const shapeElement = generateShape(design.size.shape, width, height, design.color);
 
