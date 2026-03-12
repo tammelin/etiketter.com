@@ -78,6 +78,11 @@ watch(
             formValues.value.color = '';
         }
 
+        // Reset alignment to center for non-rectangular shapes
+        if (newSize.shape.toLowerCase() !== 'rectangular') {
+            formValues.value.textAlignment = 'center';
+        }
+
         const newMaxLines = newSize.max_rows ?? calculateMaxLines(parseInt(newSize.dimensions.height, 10));
         const currentLines = formValues.value.textLines;
 
@@ -118,6 +123,10 @@ onMounted(async () => {
 });
 
 const isEditing = computed(() => !!uuid.value);
+
+const isRectangular = computed(() =>
+    (formValues.value.size?.shape ?? 'rectangular').toLowerCase() === 'rectangular'
+);
 
 async function onFormSubmit() {
     const svgContent = previewRef.value?.getSvgContent();
@@ -187,7 +196,7 @@ function onTextInput(index: number, event: Event) {
                             :value="size"
                             v-model="formValues.size"
                             />
-                            {{ size.dimensions.width }} x {{ size.dimensions.height }} mm<template v-if="size.shape !== 'rectangular'"> - {{ __('shape' + size.shape.charAt(0).toUpperCase() + size.shape.slice(1)) }}</template>
+                            {{ size.dimensions.height }} x {{ size.dimensions.width }} mm<template v-if="size.shape !== 'rectangular'"> - {{ __('shape' + size.shape.charAt(0).toUpperCase() + size.shape.slice(1)) }}</template>
                         </label>
                     </div>
                 </fieldset>
@@ -252,7 +261,7 @@ function onTextInput(index: number, event: Event) {
 
                         <div class="text-alignment">
                             <span>{{ __('textAlignment') }}</span>
-                            <label>
+                            <label v-if="isRectangular">
                                 <input type="radio" name="alignment" value="left" v-model="formValues.textAlignment" />
                                 {{ __('alignLeft') }}
                             </label>

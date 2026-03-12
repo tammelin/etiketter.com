@@ -10,6 +10,7 @@ const props = defineProps<{
 const svgContent = ref<string | null>(null);
 const currentColor = ref('#ffffff');
 const currentWidth = ref(0);
+const currentHeight = ref(0);
 const currentShape = ref('');
 const wrapperRef = useTemplateRef<HTMLDivElement>('wrapper');
 
@@ -19,10 +20,22 @@ const svgDisplayWidth = computed(() =>
 
 const borderRadius = computed(() => {
     const s = currentShape.value.toLowerCase();
-    if (s === 'round') return '50%';
-    if (s === 'oval' || s === 'ellipse') return '50%';
-    return '0px';
+    if (s === 'round' || s === 'oval' || s === 'ellipse') return '50%';
+    // SVG rect uses rx = min(w,h) * 0.08 mm.
+    // Display scale is 3px/mm, capped so max display width = currentWidth * 3px.
+    // Use the same ratio: rx_px = min(w,h) * 0.08 * 3px/mm, but scale down if container is narrower.
+    // Expressed as percentage of the rendered width: rx / displayWidth = min(w,h)*0.08*3 / (w*3) = min(w,h)*0.08/w
+    // For height percentage: min(w,h)*0.08/h
+    // This gives different % per axis — use px instead via a known max scale.
+    const w = currentWidth.value;
+    const h = currentHeight.value;
+    if (!w || !h) return '0px';
+    const rxMm = Math.min(w, h) * 0.08;
+    const pxPerMm = 3; // matches svgDisplayWidth multiplier
+    const rxPx = rxMm * pxPerMm;
+    return `${rxPx}px`;
 });
+
 
 // Update color immediately — CSS variable for transition, attribute for export
 watch(() => props.formValues.color, (color) => {
@@ -45,6 +58,7 @@ watch(
         }
 
         currentWidth.value = parseInt(newValues.size.dimensions.width, 10);
+        currentHeight.value = parseInt(newValues.size.dimensions.height, 10);
         currentShape.value = newValues.size.shape || '';
 
         svgContent.value = await generateStickerSVGWithInlinedSymbol({
@@ -59,20 +73,40 @@ watch(
         await nextTick();
         const svgEl = wrapperRef.value?.querySelector('svg');
         if (svgEl) {
-            const sideLayout = newValues.symbol && newValues.size.shape.toLowerCase() !== 'round' && newValues.size.shape.toLowerCase() !== 'oval';
+            const shape = newValues.size.shape.toLowerCase();
+            const isRound = shape === 'round' || shape === 'oval' || shape === 'ellipse';
+            const sideLayout = newValues.symbol && !isRound;
             const symbolAreaWidth = sideLayout ? parseInt(newValues.size.dimensions.width, 10) * 0.35 : 0;
-            const usableWidth = (parseInt(newValues.size.dimensions.width, 10) - symbolAreaWidth) * 0.8;
+            const MARGIN = 2;
+            const stickerWidth = parseInt(newValues.size.dimensions.width, 10);
+            const widthFraction = isRound ? 0.65 : 1;
+            const usableWidth = (stickerWidth - symbolAreaWidth - MARGIN * 2) * widthFraction;
 
             const textEls = Array.from(svgEl.querySelectorAll<SVGTextElement>('text'));
             if (textEls.length) {
                 const maxTextWidth = Math.max(...textEls.map(el => el.getBBox().width));
                 if (maxTextWidth > usableWidth) {
                     const scale = usableWidth / maxTextWidth;
-                    textEls.forEach(el => {
-                        const current = parseFloat(el.getAttribute('font-size') || '6');
-                        el.setAttribute('font-size', String(Math.max(1, current * scale)));
+                    const LINE_HEIGHT_RATIO = 1.4;
+                    const paddingFraction = 0.1;
+                    const newFontSize = Math.max(1, parseFloat(textEls[0].getAttribute('font-size') || '5') * scale);
+                    const newLineHeight = newFontSize * LINE_HEIGHT_RATIO;
+
+                    // Recalculate vertical centering for the scaled font size
+                    const stickerHeight = parseInt(newValues.size.dimensions.height, 10);
+                    const symbolBottom = !isRound && !sideLayout && newValues.symbol
+                        ? stickerHeight * 0.1 + Math.min(parseInt(newValues.size.dimensions.width, 10), stickerHeight) * 0.3
+                        : 0;
+                    const textAreaTop = symbolBottom > 0 ? symbolBottom : 0;
+                    const textAreaHeight = stickerHeight - textAreaTop;
+                    const usableHeight = textAreaHeight * (1 - paddingFraction * 2);
+                    const totalTextHeight = textEls.length * newLineHeight;
+                    const newFirstY = textAreaTop + textAreaHeight * paddingFraction + (usableHeight - totalTextHeight) / 2 + newLineHeight * 0.8;
+
+                    textEls.forEach((el, i) => {
+                        el.setAttribute('font-size', String(newFontSize));
+                        el.setAttribute('y', String(newFirstY + i * newLineHeight));
                     });
-                    // Serialize the adjusted SVG back so getSvgContent() returns the fitted version
                     svgContent.value = wrapperRef.value!.innerHTML;
                 }
             }
@@ -122,13 +156,12 @@ defineExpose({
     min-height: 150px;
     border-radius: 4px;
     padding: 1rem;
-    background: white;
 }
 
 .svg-wrapper {
-    border: 1px solid lightgrey;
     transition: width 0.4s ease, aspect-ratio 0.4s ease, border-radius 0.4s ease;
     overflow: hidden;
+    box-shadow: 0 0 0 1px lightgrey;
 }
 
 .svg-wrapper :deep(svg) {

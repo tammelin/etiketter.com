@@ -65,12 +65,13 @@ export async function generateStickerSVGWithInlinedSymbol(design: StickerDesign)
 
     // For side layout: symbol takes left 35%, text gets right 65%
     // For top layout: symbol takes top portion, text gets remaining height below
+    const MARGIN = 2; // mm — fixed margin left of symbol, between symbol and text, right of text
     const symbolAreaWidth = sideLayout ? width * 0.35 : 0;
     const symbolBottom = !sideLayout && design.symbol ? height * 0.1 + Math.min(width, height) * 0.3 : 0;
 
     const textElements = generateTextElements(
         design.textLines, design.textAlignment, width, height,
-        { symbolBottom, textLeft: symbolAreaWidth }
+        { symbolBottom, textLeft: symbolAreaWidth, margin: MARGIN }
     );
 
     let symbolElement = '';
@@ -111,8 +112,9 @@ function generateShape(shape: string, width: number, height: number, color: stri
         return `<ellipse cx="${rx}" cy="${ry}" rx="${rx}" ry="${ry}" fill="${color}" class="sticker-shape" />`;
     }
 
-    // Default: rectangle (rektangulär)
-    return `<rect x="0" y="0" width="${width}" height="${height}" fill="${color}" class="sticker-shape" />`;
+    // Default: rectangle with rounded corners
+    const rx = Math.min(width, height) * 0.08;
+    return `<rect x="0" y="0" width="${width}" height="${height}" rx="${rx}" ry="${rx}" fill="${color}" class="sticker-shape" />`;
 }
 
 /**
@@ -123,7 +125,7 @@ function generateTextElements(
     alignment: TextAlignment,
     width: number,
     height: number,
-    { symbolBottom = 0, textLeft = 0 }: { symbolBottom?: number; textLeft?: number } = {}
+    { symbolBottom = 0, textLeft = 0, margin = 2 }: { symbolBottom?: number; textLeft?: number; margin?: number } = {}
 ): string {
     if (!textLines.length) return '';
 
@@ -133,17 +135,17 @@ function generateTextElements(
     if (first === -1) return ''; // all empty
     const activeLines = textLines.slice(first, textLines.length - last);
 
-    // Text area bounds (10% padding on each side)
-    const textAreaLeft = textLeft;
-    const textAreaWidth = width - textLeft;
+    // Text area bounds: fixed margin left of symbol area, right edge, and top/bottom
+    const textAreaLeft = textLeft + margin;
+    const textAreaWidth = width - textLeft - margin * 2;
     const textAreaTop = symbolBottom > 0 ? symbolBottom : 0;
     const textAreaHeight = height - textAreaTop;
     const paddingFraction = 0.1;
     const usableHeight = textAreaHeight * (1 - paddingFraction * 2);
 
-    // Scale font size so all lines fit vertically; cap at 6mm
-    const LINE_HEIGHT_RATIO = 1.3;
-    const maxFontSize = 6;
+    // Scale font size so all lines fit vertically; cap at 5mm
+    const LINE_HEIGHT_RATIO = 1.4;
+    const maxFontSize = 5;
     const fontSize = Math.max(1, Math.min(maxFontSize, usableHeight / (activeLines.length * LINE_HEIGHT_RATIO)));
     const lineHeight = fontSize * LINE_HEIGHT_RATIO;
 
@@ -154,11 +156,11 @@ function generateTextElements(
     // Map alignment to SVG text-anchor
     const textAnchor = alignment === 'left' ? 'start' : alignment === 'right' ? 'end' : 'middle';
 
-    // Calculate X position within the text area
+    // Calculate X position within the text area (margin already baked into textAreaLeft/Width)
     const x = alignment === 'left'
-        ? textAreaLeft + 3
+        ? textAreaLeft
         : alignment === 'right'
-            ? textAreaLeft + textAreaWidth - 3
+            ? textAreaLeft + textAreaWidth
             : textAreaLeft + textAreaWidth / 2;
 
     return activeLines
@@ -198,10 +200,11 @@ function generateTextElements(
  * Generate inlined SVG symbol wrapped in a <g> element with proper positioning
  */
 function generateInlinedSymbol(svgContent: string, width: number, height: number, sideLayout = false): string {
-    const symbolSize = Math.min(width, height) * 0.3;
-    // Side layout: center symbol vertically in left 35% of width
+    const MARGIN = 2;
+    const symbolSize = sideLayout ? Math.min(width, height) * 0.55 : Math.min(width, height) * 0.3;
+    // Side layout: center symbol vertically, aligned to left margin
     // Top layout: center symbol horizontally in top portion
-    const x = sideLayout ? (width * 0.35 - symbolSize) / 2 : (width - symbolSize) / 2;
+    const x = sideLayout ? MARGIN + (width * 0.35 - MARGIN - symbolSize) / 2 : (width - symbolSize) / 2;
     const y = sideLayout ? (height - symbolSize) / 2 : height * 0.1;
 
     // Parse the SVG to extract viewBox and inner content
