@@ -188,30 +188,27 @@ function onTextInput(index: number, event: Event) {
 
             <div class="size-and-color-container">
                 <fieldset>
-                    <div v-for="size in formFields?.sizes" :key="size.dimensions.width + size.dimensions.height">
-                        <label :for="`${size.dimensions.width}x${size.dimensions.height}`">
-                            <input
-                            type="radio"
-                            :id="`${size.dimensions.width}x${size.dimensions.height}`"
-                            name="size"
-                            :value="size"
-                            v-model="formValues.size"
-                            />
-                            {{ size.dimensions.height }} x {{ size.dimensions.width }} mm<template v-if="size.shape !== 'rectangular'"> - {{ __('shape' + size.shape.charAt(0).toUpperCase() + size.shape.slice(1)) }}</template>
-                        </label>
-                    </div>
+                    <label v-for="size in formFields?.sizes" :key="size.dimensions.width + size.dimensions.height" :for="`${size.dimensions.width}x${size.dimensions.height}`">
+                        <input
+                        type="radio"
+                        :id="`${size.dimensions.width}x${size.dimensions.height}`"
+                        name="size"
+                        :value="size"
+                        v-model="formValues.size"
+                        /><span class="custom-control"></span>
+                        {{ size.dimensions.height }} x {{ size.dimensions.width }} mm<template v-if="size.shape !== 'rectangular'"> - {{ __('shape' + size.shape.charAt(0).toUpperCase() + size.shape.slice(1)) }}</template>
+                    </label>
                 </fieldset>
     
                 <fieldset>
-                    <div v-for="color in availableColors" :key="color.name">
-                        <label :for="color.name">
-                            <input type="radio" :id="color.name" name="color" :value="color.color" v-model="formValues.color" />
-                            {{ color.name }}
-                            <span
-                                :style="{ backgroundColor: color.color, display: 'inline-block', width: '20px', height: '20px' }"
-                            ></span>
-                        </label>
-                    </div>
+                    <label v-for="color in availableColors" :key="color.name" :for="color.name">
+                        <input type="radio" :id="color.name" name="color" :value="color.color" v-model="formValues.color" /><span class="custom-control"></span>
+                        {{ color.name }}
+                        <span
+                            class="color-preview"
+                            :style="{ backgroundColor: color.color }"
+                        ></span>
+                    </label>
                 </fieldset>
             </div>
 
@@ -243,31 +240,27 @@ function onTextInput(index: number, event: Event) {
                             />
                             <!-- <span class="char-count">{{ line.content.length }}/{{ maxChars }}</span> -->
                             <label>
-                                <input type="radio" :name="`font-${index}`" value="straight" v-model="line.textStyle" tabindex="-1" />
-                                <!-- {{ __('columnStraight') }} -->
+                                <input type="radio" :name="`font-${index}`" value="straight" v-model="line.textStyle" tabindex="-1" /><span class="custom-control"></span>
                             </label>
                             <label>
-                                <input type="radio" :name="`font-${index}`" value="italic" v-model="line.textStyle" tabindex="-1" />
-                                <!-- {{ __('columnItalic') }} -->
+                                <input type="radio" :name="`font-${index}`" value="italic" v-model="line.textStyle" tabindex="-1" /><span class="custom-control"></span>
                             </label>
                             <label>
-                                <input type="radio" :name="`font-${index}`" value="cursive" v-model="line.textStyle" tabindex="-1" />
-                                <!-- {{ __('columnCursive') }} -->
+                                <input type="radio" :name="`font-${index}`" value="cursive" v-model="line.textStyle" tabindex="-1" /><span class="custom-control"></span>
                             </label>
                             <label>
-                                <input type="checkbox" :checked="line.fontWeight === 'bold'" @change="line.fontWeight = line.fontWeight === 'bold' ? 'normal' : 'bold'" tabindex="-1" />
-                                <!-- {{ __('columnBold') }} -->
+                                <input type="checkbox" :checked="line.fontWeight === 'bold'" @change="line.fontWeight = line.fontWeight === 'bold' ? 'normal' : 'bold'" tabindex="-1" /><span class="custom-control"></span>
                             </label>
                         </div>
 
                         <div class="text-alignment">
                             <span>{{ __('textAlignment') }}</span>
                             <label v-if="isRectangular">
-                                <input type="radio" name="alignment" value="left" v-model="formValues.textAlignment" />
+                                <input type="radio" name="alignment" value="left" v-model="formValues.textAlignment" /><span class="custom-control"></span>
                                 {{ __('alignLeft') }}
                             </label>
                             <label>
-                                <input type="radio" name="alignment" value="center" v-model="formValues.textAlignment" />
+                                <input type="radio" name="alignment" value="center" v-model="formValues.textAlignment" /><span class="custom-control"></span>
                                 {{ __('alignCenter') }}
                             </label>
                         </div>
@@ -335,39 +328,101 @@ function onTextInput(index: number, event: Event) {
 $color-primary: #e5392a;
 $color-accent: #e5392a;
 $color-accent-light: #fce8e6;
-$color-step-line: #e0e0e0;
+$color-step-line: #f8f8f8;
 $color-white: #fff;
 
-.symbol-price {
-    font-size: 0.75em;
-    font-weight: normal;
-    color: #666;
-    margin-left: 0.5em;
+h3 {
+    margin-bottom: 2rem;
+}
+
+// Custom checkbox & radio — hide native, show styled span
+input[type="checkbox"],
+input[type="radio"] {
+    position: absolute;
+    opacity: 0;
+    width: 0;
+    height: 0;
+    margin: 0;
+    pointer-events: none;
+}
+
+input[type="checkbox"] + .custom-control,
+input[type="radio"] + .custom-control {
+    display: inline-block;
+    position: relative;
+    flex-shrink: 0;
+    width: 22px;
+    height: 22px;
+    border: 1px solid $color-accent;
+    background: $color-white;
+    cursor: pointer;
+    vertical-align: middle;
+
+    &:hover {
+        // Drop shadow
+        box-shadow: 0 0 6px 3px rgba(0, 0, 0, 0.05);
+    }
+
+    &::after {
+        content: '';
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        width: 0.6em;
+        height: 0.6em;
+        margin-left: -0.3em;
+        margin-top: -0.3em;
+        background: $color-accent;
+        opacity: 0;
+        transition: opacity 0.15s;
+    }
+}
+
+input[type="checkbox"] + .custom-control {
+    border-radius: 3px;
+    &::after { border-radius: 1px; }
+}
+
+input[type="radio"] + .custom-control {
+    border-radius: 50%;
+    &::after { border-radius: 50%; }
+}
+
+input[type="checkbox"]:checked + .custom-control::after,
+input[type="radio"]:checked + .custom-control::after {
+    opacity: 1;
+}
+input[type="checkbox"]:not(:checked):hover + .custom-control::after,
+input[type="radio"]:not(:checked):hover + .custom-control::after {
+    opacity: 0.25;
 }
 
 form {
-    padding-left: 80px;
+    padding-left: 120px;
     fieldset {
         // Reset
         border: none;
         margin: 0;
         padding: 0;
+        &:not(:last-child) {
+            margin-bottom: 2rem;
+        }
     }
     h3 {
         position: relative;
         .step-number {
             position: absolute;
-            left: -40px;
+            transform: translateX(calc(-100% - 20px));
             top: 0;
-            width: 30px;
-            height: 30px;
+            width: 50px;
+            height: 50px;
             border-radius: 50%;
-            background-color: $color-primary;
-            color: $color-white;
+            background-color: $color-step-line;
+            color: #000;
             display: flex;
             justify-content: center;
             align-items: center;
-            font-size: 14px;
+            font-size: 24px;
             &::after {
                 // Add a dashed line connecting the step number to the fieldset
                 content: '';
@@ -384,8 +439,27 @@ form {
 }
 .size-and-color-container {
     display: flex;
-    gap: 4rem;
+    gap: 80px;
     margin-bottom: 2rem;
+
+    label {
+        display: flex;
+        align-items: center;
+        gap: 12.5px;
+        cursor: pointer;
+        margin-bottom: 0.4rem;
+        &:not(:last-child) {
+            margin-bottom: 1rem;
+        }
+    }
+
+    .color-preview {
+        border: 1px solid $color-step-line;
+        width: 30px;
+        height: 20px;
+        display: inline-block;
+    }
+
 }
 .text-and-preview-container {
     display: flex;
