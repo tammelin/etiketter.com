@@ -20,6 +20,7 @@ Then everything can be translated the usual WordPress way.
 [X] - Link order item meta to sticker details page
 [ ] - Make order details in My Account more beautiful?
 [ ] - Add support for icon uploads
+[ ] - Implement: https://woocommerce.com/products/product-quantity/ 
 
 ## Features
 
